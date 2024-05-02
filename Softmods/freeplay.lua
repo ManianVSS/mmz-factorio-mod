@@ -724,7 +724,8 @@ function get_accessible_containers(player, radius)
     for i = 1, #nearby_entities do
         if (nearby_entities[i].name == "wooden-chest") or
             (nearby_entities[i].name == "iron-chest") or
-            (nearby_entities[i].name == "steel-chest") then
+            (nearby_entities[i].name == "steel-chest") or 
+            (nearby_entities[i].name == "infinity-chest") then
             if player.can_reach_entity(nearby_entities[i]) and
                 nearby_entities[i].has_items_inside() then
                 table.insert(inventories, nearby_entities[i])
@@ -819,206 +820,86 @@ function refillEntitiesCommand(command)
     -- Map of refillable entities to list of refillable items
     refillable_entity_to_items_map = {
         ["burner-mining-drill"] = {
-            ["coal"] = {type = "fuel", name = "coal", count = 50},
-            ["wood"] = {type = "fuel", name = "wood", count = 100}
+            ["coal"] = {type = "fuel", count = 5, max = 50},
+            ["wood"] = {type = "fuel", count = 10, max = 100}
         },
         ["burner-inserter"] = {
-            ["coal"] = {type = "fuel", name = "coal", count = 5},
-            ["wood"] = {type = "fuel", name = "wood", count = 10}
+            ["coal"] = {type = "fuel", count = 5, max = 50},
+            ["wood"] = {type = "fuel", count = 10, max = 100}
         },
         ["stone-furnace"] = {
-            ["coal"] = {type = "fuel", name = "coal", count = 50},
-            ["wood"] = {type = "fuel", name = "wood", count = 100},
-            ["iron-ore"] = {
-                type = "furnace-ingredient",
-                name = "iron-ore",
-                count = 50
-            },
-            ["copper-ore"] = {
-                type = "furnace-ingredient",
-                name = "copper-ore",
-                count = 50
-            },
-            ["stone"] = {
-                type = "furnace-ingredient",
-                name = "stone",
-                count = 50
-            },
-            ["iron-plate"] = {
-                type = "furnace-ingredient",
-                name = "iron-plate",
-                count = 100
-            }
+            ["coal"] = {type = "fuel", count = 5, max = 50},
+            ["wood"] = {type = "fuel", count = 10, max = 100},
+            ["iron-ore"] = {type = "furnaceitem", count = 5, max = 50},
+            ["copper-ore"] = {type = "furnaceitem", count = 5, max = 50},
+            ["stone"] = {type = "furnaceitem", count = 5, max = 50},
+            ["iron-plate"] = {type = "furnaceitem", count = 5, max = 50}
         },
         ["steel-furnace"] = {
-            ["coal"] = {type = "fuel", name = "coal", count = 50},
-            ["solid-fuel"] = {type = "fuel", name = "solid-fuel", count = 50},
-            ["iron-ore"] = {
-                type = "furnace-ingredient",
-                name = "iron-ore",
-                count = 100
-            },
-            ["copper-ore"] = {
-                type = "furnace-ingredient",
-                name = "copper-ore",
-                count = 100
-            },
-            ["stone"] = {
-                type = "furnace-ingredient",
-                name = "stone",
-                count = 100
-            },
-            ["iron-plate"] = {
-                type = "furnace-ingredient",
-                name = "iron-plate",
-                count = 100
-            }
+            ["coal"] = {type = "fuel", count = 5, max = 50},
+            ["solid-fuel"] = {type = "fuel", count = 5, max = 50},
+            ["iron-ore"] = {type = "furnaceitem", count = 5, max = 50},
+            ["copper-ore"] = {type = "furnaceitem", count = 5, max = 50},
+            ["stone"] = {type = "furnaceitem", count = 5, max = 50},
+            ["iron-plate"] = {type = "furnaceitem", count = 5, max = 50}
         },
         ["electric-furnace"] = {
-            ["iron-ore"] = {
-                type = "furnace-ingredient",
-                name = "iron-ore",
-                count = 100
-            },
-            ["copper-ore"] = {
-                type = "furnace-ingredient",
-                name = "copper-ore",
-                count = 100
-            },
-            ["stone"] = {
-                type = "furnace-ingredient",
-                name = "stone",
-                count = 100
-            },
-            ["iron-plate"] = {
-                type = "furnace-ingredient",
-                name = "iron-plate",
-                count = 100
-            }
+            ["iron-ore"] = {type = "furnaceitem", count = 5, max = 50},
+            ["copper-ore"] = {type = "furnaceitem", count = 5, max = 50},
+            ["stone"] = {type = "furnaceitem", count = 5, max = 50},
+            ["iron-plate"] = {type = "furnaceitem", count = 5, max = 50}
         },
         ["boiler"] = {
-            ["coal"] = {type = "fuel", name = "coal", count = 50},
-            ["wood"] = {type = "fuel", name = "wood", count = 100}
+            ["coal"] = {type = "fuel", count = 5, max = 50},
+            ["wood"] = {type = "fuel", count = 10, max = 100}
         },
         ["locomotive"] = {
-            ["coal"] = {type = "fuel", name = "coal", count = 150},
-            ["solid-fuel"] = {type = "fuel", name = "solid-fuel", count = 150},
-            ["rocket-fuel"] = {type = "fuel", name = "rocket-fuel", count = 50},
-            ["nuclear-fuel"] = {
-                type = "fuel",
-                name = "nuclear-fuel",
-                count = 10
-            }
+            ["coal"] = {type = "fuel", count = 50, max = 150},
+            ["solid-fuel"] = {type = "fuel", count = 50, max = 150},
+            ["rocket-fuel"] = {type = "fuel", count = 10, max = 30},
+            ["nuclear-fuel"] = {type = "fuel", count = 1, max = 3}
         },
         ["assembling-machine-1"] = {
-            ["coal"] = {type = "ingredient", name = "coal", count = 100},
-            ["wood"] = {type = "ingredient", name = "wood", count = 100},
-            ["iron-plate"] = {
-                type = "ingredient",
-                name = "iron-plate",
-                count = 100
-            },
-            ["copper-plate"] = {
-                type = "ingredient",
-                name = "copper-plate",
-                count = 100
-            },
-            ["stone"] = {type = "ingredient", name = "stone", count = 100},
-            ["steel-plate"] = {
-                type = "ingredient",
-                name = "steel-plate",
-                count = 100
-            }
+            ["coal"] = {type = "ingredient", count = 10, max = 100},
+            ["wood"] = {type = "ingredient", count = 10, max = 100},
+            ["iron-plate"] = {type = "ingredient", count = 10, max = 100},
+            ["copper-plate"] = {type = "ingredient", count = 10, max = 100},
+            ["stone"] = {type = "ingredient", count = 10, max = 100},
+            ["steel-plate"] = {type = "ingredient", count = 10, max = 100}
         },
         ["assembling-machine-2"] = {
-            ["coal"] = {type = "ingredient", name = "coal", count = 100},
-            ["wood"] = {type = "ingredient", name = "wood", count = 100},
-            ["iron-plate"] = {
-                type = "ingredient",
-                name = "iron-plate",
-                count = 100
-            },
-            ["copper-plate"] = {
-                type = "ingredient",
-                name = "copper-plate",
-                count = 100
-            },
-            ["stone"] = {type = "ingredient", name = "stone", count = 100},
-            ["steel-plate"] = {
-                type = "ingredient",
-                name = "steel-plate",
-                count = 100
-            }
+            ["coal"] = {type = "ingredient", count = 10, max = 100},
+            ["wood"] = {type = "ingredient", count = 10, max = 100},
+            ["iron-plate"] = {type = "ingredient", count = 10, max = 100},
+            ["copper-plate"] = {type = "ingredient", count = 10, max = 100},
+            ["stone"] = {type = "ingredient", count = 10, max = 100},
+            ["steel-plate"] = {type = "ingredient", count = 10, max = 100}
         },
         ["assembling-machine-3"] = {
-            ["coal"] = {type = "ingredient", name = "coal", count = 100},
-            ["wood"] = {type = "ingredient", name = "wood", count = 100},
-            ["iron-plate"] = {
-                type = "ingredient",
-                name = "iron-plate",
-                count = 100
-            },
-            ["copper-plate"] = {
-                type = "ingredient",
-                name = "copper-plate",
-                count = 100
-            },
-            ["stone"] = {type = "ingredient", name = "stone", count = 100},
-            ["steel-plate"] = {
-                type = "ingredient",
-                name = "steel-plate",
-                count = 100
-            }
+            ["coal"] = {type = "ingredient", count = 10, max = 100},
+            ["wood"] = {type = "ingredient", count = 10, max = 100},
+            ["iron-plate"] = {type = "ingredient", count = 10, max = 100},
+            ["copper-plate"] = {type = "ingredient", count = 10, max = 100},
+            ["stone"] = {type = "ingredient", count = 10, max = 100},
+            ["steel-plate"] = {type = "ingredient", count = 10, max = 100}
         },
         ["lab"] = {
-            ["automation-science-pack"] = {
-                type = "fuel",
-                name = "automation-science-pack",
-                count = 5
-            },
-            ["logistic-science-pack"] = {
-                type = "fuel",
-                name = "logistic-science-pack",
-                count = 5
-            },
-            ["military-science-pack"] = {
-                type = "fuel",
-                name = "military-science-pack",
-                count = 5
-            },
-            ["chemical-science-pack"] = {
-                type = "fuel",
-                name = "chemical-science-pack",
-                count = 5
-            },
-            ["production-science-pack"] = {
-                type = "fuel",
-                name = "production-science-pack",
-                count = 5
-            },
-            ["utility-science-pack"] = {
-                type = "fuel",
-                name = "utility-science-pack",
-                count = 5
-            },
-            ["space-science-pack"] = {
-                type = "fuel",
-                name = "space-science-pack",
-                count = 5
-            }
+            ["automation-science-pack"] = {type = "fuel", count = 5, max = 200},
+            ["logistic-science-pack"] = {type = "fuel", count = 5, max = 200},
+            ["military-science-pack"] = {type = "fuel", count = 5, max = 200},
+            ["chemical-science-pack"] = {type = "fuel", count = 5, max = 200},
+            ["production-science-pack"] = {type = "fuel", count = 5, max = 200},
+            ["utility-science-pack"] = {type = "fuel", count = 5, max = 200},
+            ["space-science-pack"] = {type = "fuel", count = 5, max = 200}
         },
         ["gun-turret"] = {
-            ["firearm-magazine"] = {name = "firearm-magazine", count = 200},
+            ["firearm-magazine"] = {type = "fuel", count = 25, max = 200},
             ["piercing-rounds-magazine"] = {
                 type = "fuel",
-                name = "piercing-rounds-magazine",
-                count = 200
+                count = 25,
+                max = 200
             },
-            ["uranium-rounds-magazine"] = {
-                type = "fuel",
-                name = "uranium-rounds-magazine",
-                count = 200
-            }
+            ["uranium-rounds-magazine"] = {type = "fuel", count = 25, max = 200}
         }
     }
 
@@ -1036,12 +917,14 @@ function refillEntitiesCommand(command)
             for refillable_item_name, refillable_item_stack_data in pairs(
                                                                         refillable_item_map) do
                 item_type = refillable_item_stack_data["type"]
+                item_count = refillable_item_stack_data["count"]
+                item_max_count = refillable_item_stack_data["max"]
                 refillable_item_stack = {
-                    name = refillable_item_stack_data["name"],
-                    count = refillable_item_stack_data["count"]
+                    name = refillable_item_name,
+                    count = item_count
                 }
 
-                if item_type == "furnace-ingredient" then
+                if item_type == "furnaceitem" then
                     recipe_name =
                         furnace_item_to_recipe_map[refillable_item_name]
                     prepared_item_count_in_furnace =
@@ -1068,11 +951,12 @@ function refillEntitiesCommand(command)
                     end
                     if refillable_entity.previous_recipe and
                         (refillable_entity.previous_recipe.name == recipe_name) and
-                        refillable_entity.can_insert(refillable_item_stack) then
+                        refillable_entity.can_insert(refillable_item_stack) and
+                        (refillable_entity.get_item_count(refillable_item_name) <
+                            item_max_count) then
                         container_with_item =
                             find_container_with_entity(refillable_item_name,
-                                                       inventories,
-                                                       refillable_item_stack_data["count"])
+                                                       inventories, item_count)
                         if container_with_item ~= nil then
                             -- log(
                             --     "Going to insert furnace ingredients to furnace " ..
@@ -1089,11 +973,12 @@ function refillEntitiesCommand(command)
                         end
                     end
                 else -- if (item_type == "fuel") or (item_type == "ingredient") then
-                    if refillable_entity.can_insert(refillable_item_stack) then
+                    if refillable_entity.can_insert(refillable_item_stack) and
+                        (refillable_entity.get_item_count(refillable_item_name) <
+                            item_max_count) then
                         container_with_item =
                             find_container_with_entity(refillable_item_name,
-                                                       inventories,
-                                                       refillable_item_stack_data["count"])
+                                                       inventories, item_count)
                         if container_with_item ~= nil then
                             -- log("Going to insert ingredients to entity " ..
                             --         refillable_entity.name .. " with item " ..
