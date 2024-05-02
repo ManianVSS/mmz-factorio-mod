@@ -735,9 +735,10 @@ function get_accessible_containers(player, radius)
 end
 
 function find_container_with_entity(entity_name, inventories, count)
-    count = count or 1
+    if (count == nil) or (count <= 0) then count = 1 end
+
     for i = 1, #inventories do
-        if inventories[i].get_item_count(entity_name) > 0 then
+        if inventories[i].get_item_count(entity_name) >= count then
             return inventories[i]
         end
     end
@@ -973,37 +974,37 @@ function refillEntitiesCommand(command)
             ["automation-science-pack"] = {
                 type = "fuel",
                 name = "automation-science-pack",
-                count = 25
+                count = 5
             },
             ["logistic-science-pack"] = {
                 type = "fuel",
                 name = "logistic-science-pack",
-                count = 25
+                count = 5
             },
             ["military-science-pack"] = {
                 type = "fuel",
                 name = "military-science-pack",
-                count = 25
+                count = 5
             },
             ["chemical-science-pack"] = {
                 type = "fuel",
                 name = "chemical-science-pack",
-                count = 25
+                count = 5
             },
             ["production-science-pack"] = {
                 type = "fuel",
                 name = "production-science-pack",
-                count = 25
+                count = 5
             },
             ["utility-science-pack"] = {
                 type = "fuel",
                 name = "utility-science-pack",
-                count = 25
+                count = 5
             },
             ["space-science-pack"] = {
                 type = "fuel",
                 name = "space-science-pack",
-                count = 25
+                count = 5
             }
         },
         ["gun-turret"] = {
