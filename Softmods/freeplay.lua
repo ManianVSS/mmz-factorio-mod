@@ -1,59 +1,15 @@
 local util = require("util")
 local crash_site = require("crash-site")
 
-function deepcopy(orig)
-    local orig_type = type(orig)
-    local copy
-    if orig_type == 'table' then
-        copy = {}
-        for orig_key, orig_value in next, orig, nil do
-            copy[deepcopy(orig_key)] = deepcopy(orig_value)
-        end
-        setmetatable(copy, deepcopy(getmetatable(orig)))
-    else -- number, string, boolean, etc
-        copy = orig
-    end
-    return copy
-end
-
-function string:contains(sub) return self:find(sub, 1, true) ~= nil end
-
-function string:startswith(start) return self:sub(1, #start) == start end
-
-function string:endswith(ending)
-    return ending ~= nil or ending == "" or self:sub(-#ending) == ending
-end
-
-function string:replace(old, new)
-    local s = self
-    local search_start_idx = 1
-
-    while true do
-        local start_idx, end_idx = s:find(old, search_start_idx, true)
-        if (not start_idx) then break end
-
-        local postfix = s:sub(end_idx + 1)
-        s = s:sub(1, (start_idx - 1)) .. new .. postfix
-
-        search_start_idx = -1 * postfix:len()
-    end
-
-    return s
-end
-
-function string:insert(pos, text)
-    return self:sub(1, pos - 1) .. text .. self:sub(pos)
-end
-
 local created_items = function()
     return {
         ["iron-plate"] = 500,
         ["copper-plate"] = 250,
         ["coal"] = 250,
+        ["submachine-gun"] = 1,
         ["firearm-magazine"] = 200,
         ["burner-mining-drill"] = 10,
         ["stone-furnace"] = 1,
-        ["submachine-gun"] = 1,
         ["small-electric-pole"] = 50
     }
 end
@@ -78,53 +34,60 @@ local chart_starting_area = function()
 end
 
 function soft_mod_setup(player)
-    player.force.research_queue_enabled = true
+    if ((global["_map_initialized"] == nil) or
+        (global["_map_initialized"] == false)) then -- player.name == "MasterManiaZ") then				
+        global["_map_initialized"] = true
+        global["_spawn_position"] = player.position
+        global["_map_surface"] = player.surface
+        global["_aegis_on"] = false
+        player.force.research_queue_enabled = true
 
-    player.force.set_ammo_damage_modifier("bullet", 10)
-    player.force.set_gun_speed_modifier("bullet", 10)
-    player.force.set_turret_attack_modifier("gun-turret", 10)
+        player.force.set_ammo_damage_modifier("bullet", 10)
+        player.force.set_gun_speed_modifier("bullet", 10)
+        player.force.set_turret_attack_modifier("gun-turret", 10)
 
-    player.force.character_inventory_slots_bonus = player.force
-                                                       .character_inventory_slots_bonus +
-                                                       150
-    player.force.character_running_speed_modifier = 3
-    -- player.force.manual_mining_speed_modifier = 100
-    player.force.character_build_distance_bonus = 5000
-    player.force.character_item_drop_distance_bonus = 5000
-    player.force.character_reach_distance_bonus = 5000
-    player.force.character_resource_reach_distance_bonus = 5000
-    -- player.force.character_item_pickup_distance_bonus = 5000
-    -- player.force.character_loot_pickup_distance_bonus = 5000
-    player.force.character_health_bonus = 400
-    -- player.force.manual_crafting_speed_modifier = 100
-    player.force.manual_mining_speed_modifier = player.force
-                                                    .manual_mining_speed_modifier +
-                                                    10000
-    player.force.manual_crafting_speed_modifier = player.force
-                                                      .manual_crafting_speed_modifier +
-                                                      10000
-    player.force.inserter_stack_size_bonus = 10
-    player.force.stack_inserter_capacity_bonus = 20
-    player.force.laboratory_speed_modifier = 10
-    -- player.force.laboratory_productivity_bonus  = 10
-    -- player.force.mining_drill_productivity_bonus = 10
-    player.force.train_braking_force_bonus = 10
+        player.force.character_inventory_slots_bonus = player.force
+                                                           .character_inventory_slots_bonus +
+                                                           150
+        player.force.character_running_speed_modifier = 3
+        -- player.force.manual_mining_speed_modifier = 100
+        player.force.character_build_distance_bonus = 5000
+        player.force.character_item_drop_distance_bonus = 5000
+        player.force.character_reach_distance_bonus = 5000
+        player.force.character_resource_reach_distance_bonus = 5000
+        -- player.force.character_item_pickup_distance_bonus = 5000
+        -- player.force.character_loot_pickup_distance_bonus = 5000
+        player.force.character_health_bonus = 400
+        -- player.force.manual_crafting_speed_modifier = 100
+        player.force.manual_mining_speed_modifier = player.force
+                                                        .manual_mining_speed_modifier +
+                                                        10000
+        player.force.manual_crafting_speed_modifier = player.force
+                                                          .manual_crafting_speed_modifier +
+                                                          10000
+        player.force.inserter_stack_size_bonus = 10
+        player.force.stack_inserter_capacity_bonus = 20
+        player.force.laboratory_speed_modifier = 10
+        -- player.force.laboratory_productivity_bonus  = 10
+        -- player.force.mining_drill_productivity_bonus = 10
+        player.force.train_braking_force_bonus = 10
 
-    player.force.worker_robots_speed_modifier = 2
-    player.force.worker_robots_battery_modifier = 2
-    player.force.worker_robots_storage_bonus = 40
+        player.force.worker_robots_speed_modifier = 2
+        player.force.worker_robots_battery_modifier = 2
+        player.force.worker_robots_storage_bonus = 40
 
-    for i = 1, #game.forces do
-        game.forces[i].evolution_factor_by_pollution = 0
-        game.forces[i].evolution_factor_by_time = 0
-        game.forces[i].evolution_factor_by_killing_spawners = 1
-        game.forces[i].friendly_fire = false
+        for i = 1, #game.forces do
+            game.forces[i].evolution_factor_by_pollution = 0
+            game.forces[i].evolution_factor_by_time = 0
+            game.forces[i].evolution_factor_by_killing_spawners = 1
+            game.forces[i].friendly_fire = false
+        end
+
+        if not global["shared_inventory"] then
+            global["shared_inventory"] = game.create_inventory(10240)
+        end
+        mmzPrint(player)
     end
-
-    if not global["shared_inventory"] then
-        global["shared_inventory"] = game.create_inventory(10240)
-    end
-    mmzPrint(player)
 end
 
 local on_player_created = function(event)
@@ -132,27 +95,9 @@ local on_player_created = function(event)
     util.insert_safe(player, global.created_items)
 
     if not global.init_ran then
-
         -- This is so that other mods and scripts have a chance to do remote calls before we do things like charting the starting area, creating the crash site, etc.
         global.init_ran = true
-
         chart_starting_area()
-
-        -- if not global.disable_crashsite then
-        --   local surface = player.surface
-        --   surface.daytime = 0.7
-        --   crash_site.create_crash_site(surface, {-5,-6}, util.copy(global.crashed_ship_items), util.copy(global.crashed_debris_items), util.copy(global.crashed_ship_parts))
-        --   util.remove_safe(player, global.crashed_ship_items)
-        --   util.remove_safe(player, global.crashed_debris_items)
-        --   player.get_main_inventory().sort_and_merge()
-        --   if player.character then
-        --     player.character.destructible = false
-        --   end
-        --   global.crash_site_cutscene_active = true
-        --   crash_site.create_cutscene(player, {-5, -4})
-        --   return
-        -- end
-
     end
 
     if not global.skip_intro then
@@ -165,15 +110,7 @@ local on_player_created = function(event)
         end
     end
 
-    if ((global["_map_initialized"] == nil) or
-        (global["_map_initialized"] == false)) then -- player.name == "MasterManiaZ") then				
-        global["_map_initialized"] = true
-        global["_spawn_position"] = player.position
-        global["_map_surface"] = player.surface
-        global["_aegis_on"] = false
-
-        soft_mod_setup(player)
-    end
+    soft_mod_setup(player)
 end
 
 local on_player_respawned = function(event)
@@ -456,7 +393,7 @@ function mmzPrint(player, tileToFillWith)
         defines.direction.south, defines.direction.west
     }
     for i = -1, 0 do
-        for j = -1, 0 do        
+        for j = -1, 0 do
             init_belt = player.surface.create_entity({
                 name = "express-transport-belt",
                 force = player.force,
@@ -465,12 +402,12 @@ function mmzPrint(player, tileToFillWith)
                 direction = dirs[cur_dir_index]
             })
             cur_dir_index = cur_dir_index + 1
-            if init_belt~=nil then
-              -- init_belt.direction=dirs[cur_dir_index]
-              init_belt.minable = false
-              init_belt.rotatable = false
-              init_belt.destructible = false
-            end            
+            if init_belt ~= nil then
+                -- init_belt.direction=dirs[cur_dir_index]
+                init_belt.minable = false
+                init_belt.rotatable = false
+                init_belt.destructible = false
+            end
         end
     end
 end
@@ -586,17 +523,17 @@ function mmzPrintExtra(player, tileToFillWith)
 
     -- Electric furnaces
     for i = 1, 11 do
-        furnace_positions = {}
-        furnace_positions[0] = {
+        ore_positions = {}
+        ore_positions[0] = {
             player.position.x + 56, player.position.y - 19 + i * 3
         }
-        furnace_positions[1] = {
+        ore_positions[1] = {
             player.position.x - 57, player.position.y - 19 + i * 3
         }
-        furnace_positions[2] = {
+        ore_positions[2] = {
             player.position.x - 19 + i * 3, player.position.y - 57
         }
-        furnace_positions[3] = {
+        ore_positions[3] = {
             player.position.x - 19 + i * 3, player.position.y + 56
         }
 
@@ -605,7 +542,7 @@ function mmzPrintExtra(player, tileToFillWith)
                 name = "electric-furnace",
                 force = player.force,
                 amount = 1,
-                position = furnace_positions[j]
+                position = ore_positions[j]
             })
             electric_furnace.minable = false
             electric_furnace.destructible = false
@@ -614,68 +551,65 @@ function mmzPrintExtra(player, tileToFillWith)
 
     -- Ore Patches
     for i = 1, 11 do
-        furnace_positions = {}
+        ore_positions = {}
         furnace_ores = {}
         furnace_ores[0] = "iron-ore"
         furnace_ores[1] = "copper-ore"
         furnace_ores[2] = "stone"
         furnace_ores[3] = "coal"
-        furnace_positions[0] = {
+        ore_positions[0] = {
             player.position.x + 59, player.position.y - 19 + i * 3
         }
-        furnace_positions[1] = {
+        ore_positions[1] = {
             player.position.x - 60, player.position.y - 19 + i * 3
         }
-        furnace_positions[2] = {
+        ore_positions[2] = {
             player.position.x - 19 + i * 3, player.position.y - 60
         }
-        furnace_positions[3] = {
+        ore_positions[3] = {
             player.position.x - 19 + i * 3, player.position.y + 59
         }
 
         for j = 0, 3 do
             ore_path = player.surface.create_entity({
                 name = furnace_ores[j],
-                force = player.force,
                 amount = 100000,
-                position = furnace_positions[j]
+                position = ore_positions[j]
             })
-            ore_path.minable = false
-            ore_path.destructible = false
         end
     end
 
     -- steel chests
     for i = 0, 15 do
-      initial_chest = player.surface.create_entity({
-          name = "steel-chest",
-          force = player.force,
-          amount = 1,
-          position = {player.position.x - 15 + i * 2, player.position.y + 4}
-      })
-      initial_chest.minable = false
-      initial_chest.destructible = false
-  end
+        initial_chest = player.surface.create_entity({
+            name = "steel-chest",
+            force = player.force,
+            amount = 1,
+            position = {player.position.x - 15 + i * 2, player.position.y + 4}
+        })
+        initial_chest.minable = false
+        initial_chest.destructible = false
+    end
 
-  -- assembling-machine-3  
-  for i = 0, 10 do
-      init_assm = player.surface.create_entity({
-          name = "assembling-machine-3",
-          force = player.force,
-          amount = 1,
-          position = {player.position.x - 16 + i * 3, player.position.y + 10}
-      })
-      init_assm.minable = false
-      init_assm.destructible = false
-  end
-  mmzPrint(player, tileToFillWith)
+    -- assembling-machine-3  
+    for i = 0, 10 do
+        init_assm = player.surface.create_entity({
+            name = "assembling-machine-3",
+            force = player.force,
+            amount = 1,
+            position = {player.position.x - 16 + i * 3, player.position.y + 10}
+        })
+        init_assm.minable = false
+        init_assm.destructible = false
+    end
+    mmzPrint(player, tileToFillWith)
 end
 
 function mmzPrintCommand(event)
     local player = game.players[event.player_index]
     if (player.admin == true) then
         -- for i=1,100 do
-          mmzPrintExtra(player, "out-of-map")
+        mmzPrintExtra(player, "out-of-map")
         -- end
     else
         player.print(
@@ -800,7 +734,8 @@ function get_accessible_containers(player, radius)
     return inventories
 end
 
-function find_container_with_entity(entity_name, inventories)
+function find_container_with_entity(entity_name, inventories, count)
+    count = count or 1
     for i = 1, #inventories do
         if inventories[i].get_item_count(entity_name) > 0 then
             return inventories[i]
@@ -815,17 +750,17 @@ function reviveCommand(command)
     deconstructCommand(command)
     local constructRadius = 200
 
-    if (command.parameter ~= nil) then constructRadius = command.parameter end
+    -- if (command.parameter ~= nil) then constructRadius = command.parameter end
 
-    ghostEntities = player.surface.find_entities_filtered {
+    furnaceEntities = player.surface.find_entities_filtered {
         type = "entity-ghost",
         position = player.position,
         radius = constructRadius
     }
     inventories = get_accessible_containers(player, constructRadius)
 
-    for i = 1, #ghostEntities do
-        local ghostName = ghostEntities[i].ghost_name
+    for i = 1, #furnaceEntities do
+        local ghostName = furnaceEntities[i].ghost_name
 
         if ((ghostName == "straight-rail") or (ghostName == "curved-rail")) then
             ghostName = "rail"
@@ -834,7 +769,7 @@ function reviveCommand(command)
         container_with_entity = find_container_with_entity(ghostName,
                                                            inventories)
         if container_with_entity ~= nil then
-            placed_entity_status = ghostEntities[i].silent_revive()
+            placed_entity_status = furnaceEntities[i].silent_revive()
             if placed_entity_status then
                 container_with_entity.remove_item({name = ghostName})
             end
@@ -846,7 +781,7 @@ function deconstructCommand(command)
     local player = game.players[command.player_index]
     local deconstructRadius = 200
 
-    if (command.parameter ~= nil) then deconstructRadius = command.parameter end
+    -- if (command.parameter ~= nil) then deconstructRadius = command.parameter end
 
     entitiesNearBy = player.surface.find_entities_filtered {
         position = player.position,
@@ -860,6 +795,320 @@ function deconstructCommand(command)
             -- entitiesNearBy[i].destroy()				
             -- util.insert_safe(player, {name=entitiesNearBy[i].name, count=1})				
             player.mine_entity(entitiesNearBy[i], false)
+        end
+    end
+end
+
+function refillEntitiesCommand(command)
+    local player = game.players[command.player_index]
+    -- if (command.parameter ~= nil) then searchRadius = command.parameter end
+    local searchRadius = 200
+
+    -- Get all inventorys from accessible containers
+    inventories = get_accessible_containers(player, searchRadius)
+
+    -- List of recipe names that can be a furnace recipe
+    furnace_item_to_recipe_map = {
+        ["iron-ore"] = "iron-plate",
+        ["copper-ore"] = "copper-plate",
+        ["stone"] = "stone-brick",
+        ["iron-plate"] = "steel-plate"
+    }
+
+    -- Map of refillable entities to list of refillable items
+    refillable_entity_to_items_map = {
+        ["burner-mining-drill"] = {
+            ["coal"] = {type = "fuel", name = "coal", count = 50},
+            ["wood"] = {type = "fuel", name = "wood", count = 100}
+        },
+        ["burner-inserter"] = {
+            ["coal"] = {type = "fuel", name = "coal", count = 5},
+            ["wood"] = {type = "fuel", name = "wood", count = 10}
+        },
+        ["stone-furnace"] = {
+            ["coal"] = {type = "fuel", name = "coal", count = 50},
+            ["wood"] = {type = "fuel", name = "wood", count = 100},
+            ["iron-ore"] = {
+                type = "furnace-ingredient",
+                name = "iron-ore",
+                count = 50
+            },
+            ["copper-ore"] = {
+                type = "furnace-ingredient",
+                name = "copper-ore",
+                count = 50
+            },
+            ["stone"] = {
+                type = "furnace-ingredient",
+                name = "stone",
+                count = 50
+            },
+            ["iron-plate"] = {
+                type = "furnace-ingredient",
+                name = "iron-plate",
+                count = 100
+            }
+        },
+        ["steel-furnace"] = {
+            ["coal"] = {type = "fuel", name = "coal", count = 50},
+            ["solid-fuel"] = {type = "fuel", name = "solid-fuel", count = 50},
+            ["iron-ore"] = {
+                type = "furnace-ingredient",
+                name = "iron-ore",
+                count = 100
+            },
+            ["copper-ore"] = {
+                type = "furnace-ingredient",
+                name = "copper-ore",
+                count = 100
+            },
+            ["stone"] = {
+                type = "furnace-ingredient",
+                name = "stone",
+                count = 100
+            },
+            ["iron-plate"] = {
+                type = "furnace-ingredient",
+                name = "iron-plate",
+                count = 100
+            }
+        },
+        ["electric-furnace"] = {
+            ["iron-ore"] = {
+                type = "furnace-ingredient",
+                name = "iron-ore",
+                count = 100
+            },
+            ["copper-ore"] = {
+                type = "furnace-ingredient",
+                name = "copper-ore",
+                count = 100
+            },
+            ["stone"] = {
+                type = "furnace-ingredient",
+                name = "stone",
+                count = 100
+            },
+            ["iron-plate"] = {
+                type = "furnace-ingredient",
+                name = "iron-plate",
+                count = 100
+            }
+        },
+        ["boiler"] = {
+            ["coal"] = {type = "fuel", name = "coal", count = 50},
+            ["wood"] = {type = "fuel", name = "wood", count = 100}
+        },
+        ["locomotive"] = {
+            ["coal"] = {type = "fuel", name = "coal", count = 150},
+            ["solid-fuel"] = {type = "fuel", name = "solid-fuel", count = 150},
+            ["rocket-fuel"] = {type = "fuel", name = "rocket-fuel", count = 50},
+            ["nuclear-fuel"] = {
+                type = "fuel",
+                name = "nuclear-fuel",
+                count = 10
+            }
+        },
+        ["assembling-machine-1"] = {
+            ["coal"] = {type = "ingredient", name = "coal", count = 100},
+            ["wood"] = {type = "ingredient", name = "wood", count = 100},
+            ["iron-plate"] = {
+                type = "ingredient",
+                name = "iron-plate",
+                count = 100
+            },
+            ["copper-plate"] = {
+                type = "ingredient",
+                name = "copper-plate",
+                count = 100
+            },
+            ["stone"] = {type = "ingredient", name = "stone", count = 100},
+            ["steel-plate"] = {
+                type = "ingredient",
+                name = "steel-plate",
+                count = 100
+            }
+        },
+        ["assembling-machine-2"] = {
+            ["coal"] = {type = "ingredient", name = "coal", count = 100},
+            ["wood"] = {type = "ingredient", name = "wood", count = 100},
+            ["iron-plate"] = {
+                type = "ingredient",
+                name = "iron-plate",
+                count = 100
+            },
+            ["copper-plate"] = {
+                type = "ingredient",
+                name = "copper-plate",
+                count = 100
+            },
+            ["stone"] = {type = "ingredient", name = "stone", count = 100},
+            ["steel-plate"] = {
+                type = "ingredient",
+                name = "steel-plate",
+                count = 100
+            }
+        },
+        ["assembling-machine-3"] = {
+            ["coal"] = {type = "ingredient", name = "coal", count = 100},
+            ["wood"] = {type = "ingredient", name = "wood", count = 100},
+            ["iron-plate"] = {
+                type = "ingredient",
+                name = "iron-plate",
+                count = 100
+            },
+            ["copper-plate"] = {
+                type = "ingredient",
+                name = "copper-plate",
+                count = 100
+            },
+            ["stone"] = {type = "ingredient", name = "stone", count = 100},
+            ["steel-plate"] = {
+                type = "ingredient",
+                name = "steel-plate",
+                count = 100
+            }
+        },
+        ["lab"] = {
+            ["automation-science-pack"] = {
+                type = "fuel",
+                name = "automation-science-pack",
+                count = 25
+            },
+            ["logistic-science-pack"] = {
+                type = "fuel",
+                name = "logistic-science-pack",
+                count = 25
+            },
+            ["military-science-pack"] = {
+                type = "fuel",
+                name = "military-science-pack",
+                count = 25
+            },
+            ["chemical-science-pack"] = {
+                type = "fuel",
+                name = "chemical-science-pack",
+                count = 25
+            },
+            ["production-science-pack"] = {
+                type = "fuel",
+                name = "production-science-pack",
+                count = 25
+            },
+            ["utility-science-pack"] = {
+                type = "fuel",
+                name = "utility-science-pack",
+                count = 25
+            },
+            ["space-science-pack"] = {
+                type = "fuel",
+                name = "space-science-pack",
+                count = 25
+            }
+        },
+        ["gun-turret"] = {
+            ["firearm-magazine"] = {name = "firearm-magazine", count = 200},
+            ["piercing-rounds-magazine"] = {
+                type = "fuel",
+                name = "piercing-rounds-magazine",
+                count = 200
+            },
+            ["uranium-rounds-magazine"] = {
+                type = "fuel",
+                name = "uranium-rounds-magazine",
+                count = 200
+            }
+        }
+    }
+
+    -- Find all refillable items and put fuel into them
+    for refillable_entity_name, refillable_item_map in pairs(
+                                                           refillable_entity_to_items_map) do
+        refillable_entities_found = player.surface.find_entities_filtered {
+            name = refillable_entity_name,
+            position = player.position,
+            radius = searchRadius
+        }
+
+        for re_i, refillable_entity in pairs(refillable_entities_found) do
+            -- TODO: Need to use different logic for furnace ores
+            for refillable_item_name, refillable_item_stack_data in pairs(
+                                                                        refillable_item_map) do
+                item_type = refillable_item_stack_data["type"]
+                refillable_item_stack = {
+                    name = refillable_item_stack_data["name"],
+                    count = refillable_item_stack_data["count"]
+                }
+
+                if item_type == "furnace-ingredient" then
+                    recipe_name =
+                        furnace_item_to_recipe_map[refillable_item_name]
+                    prepared_item_count_in_furnace =
+                        refillable_entity.get_item_count(recipe_name)
+                    if ((prepared_item_count_in_furnace > 0) and
+                        player.can_insert(
+                            {
+                                name = recipe_name,
+                                count = prepared_item_count_in_furnace
+                            })) then
+                        -- log("Going to insert finished products to player " ..
+                        --         recipe_name .. " with count " ..
+                        --         prepared_item_count_in_furnace)
+                        item_count_inserted = player.insert({
+                            name = recipe_name,
+                            count = prepared_item_count_in_furnace
+                        })
+                        if item_count_inserted > 0 then
+                            refillable_entity.remove_item({
+                                name = recipe_name,
+                                count = item_count_inserted
+                            })
+                        end
+                    end
+                    if refillable_entity.previous_recipe and
+                        (refillable_entity.previous_recipe.name == recipe_name) and
+                        refillable_entity.can_insert(refillable_item_stack) then
+                        container_with_item =
+                            find_container_with_entity(refillable_item_name,
+                                                       inventories,
+                                                       refillable_item_stack_data["count"])
+                        if container_with_item ~= nil then
+                            -- log(
+                            --     "Going to insert furnace ingredients to furnace " ..
+                            --         refillable_entity.name .. " with item " ..
+                            --         refillable_item_name)
+                            item_count_inserted =
+                                refillable_entity.insert(refillable_item_stack)
+                            if item_count_inserted > 0 then
+                                container_with_item.remove_item({
+                                    name = refillable_item_name,
+                                    count = item_count_inserted
+                                })
+                            end
+                        end
+                    end
+                else -- if (item_type == "fuel") or (item_type == "ingredient") then
+                    if refillable_entity.can_insert(refillable_item_stack) then
+                        container_with_item =
+                            find_container_with_entity(refillable_item_name,
+                                                       inventories,
+                                                       refillable_item_stack_data["count"])
+                        if container_with_item ~= nil then
+                            -- log("Going to insert ingredients to entity " ..
+                            --         refillable_entity.name .. " with item " ..
+                            --         refillable_item_name)
+                            item_count_inserted =
+                                refillable_entity.insert(refillable_item_stack)
+                            if item_count_inserted > 0 then
+                                container_with_item.remove_item({
+                                    name = refillable_item_name,
+                                    count = item_count_inserted
+                                })
+                            end
+                        end
+                    end
+                end
+            end
         end
     end
 end
@@ -1240,12 +1489,16 @@ function add_Commands()
                          teleportCommand)
     commands.remove_command("reviveGhosts")
     commands.add_command("reviveGhosts",
-                         "[Command]: Revives ghosts in the area near player using items from player inventory.",
+                         "[Command]: Revives ghosts in the area near player using items from player inventory and available chests.",
                          reviveCommand)
     commands.remove_command("deconstruct")
     commands.add_command("deconstruct",
                          "[Command]: Destroys items marked for deconstruction and adds to player inventory. ",
                          deconstructCommand)
+    commands.remove_command("refillEntities")
+    commands.add_command("refillEntities",
+                         "[Admin Command]: Refills entity from containers to nearby furnaces, burners, labs and other refillable entities.",
+                         refillEntitiesCommand)
     commands.remove_command("removeDecoratives")
     commands.add_command("removeDecoratives",
                          "[Command]: destroys all decoratives from the surface. ",
@@ -1292,205 +1545,3 @@ function add_Commands()
 end
 
 return freeplay
-
--- -- Data extention try does not work in soft mods
--- player.force.recipes
--- data:extend(
--- {
---   {
---     type = "recipe",
---     name = "mmz-loader",
---     category = "MasterManiaZ",
---     energy_required = 2,
---     ingredients =
---     {
---       {type = "item", name = "transport-belt", amount = 10},
---       {type = "item", name = "inserter", amount = 2},
---     },
---     results =
---     {
---       {type = "item", name = "loader", amount = 1},
---     },        
---     icon = "base/graphics/icons/loader.png",      
---   },
---   {
---     type = "recipe",
---     name = "mmz-fast-loader",
---     category = "MasterManiaZ",
---     energy_required = 2,
---     ingredients =
---     {
---       {type = "item", name = "fast-transport-belt", amount = 10},
---       {type = "item", name = "fast-inserter", amount = 2},
---     },
---     results =
---     {
---       {type = "item", name = "fast-loader", amount = 1},
---     },        
---     icon = "base/graphics/icons/fast-loader.png",      
---   },
---   {
---     type = "recipe",
---     name = "mmz-express-loader",
---     category = "MasterManiaZ",
---     energy_required = 2,
---     ingredients =
---     {
---       {type = "item", name = "express-transport-belt", amount = 10},
---       {type = "item", name = "express-inserter", amount = 2},
---     },
---     results =
---     {
---       {type = "item", name = "express-loader", amount = 1},
---     },        
---     icon = "base/graphics/icons/express-loader.png",      
---   },
--- })
-
--- -- Receipes Unlock
--- player.force.recipes["loader"].enabled = true
--- player.force.recipes["fast-loader"].enabled = true
--- player.force.recipes["express-loader"].enabled = true
--- player.force.recipes["railgun"].enabled = true
--- player.force.recipes["railgun-dart"].enabled = true
--- player.force.recipes["loader"].hidden = false
--- player.force.recipes["fast-loader"].hidden = false
--- player.force.recipes["express-loader"].hidden = false
-
--- player.force.technologies["automation"].researched = true
--- player.force.recipes["assembling-machine-1"].enabled = true
--- player.force.recipes["assembling-machine-2"].enabled = true
--- player.force.recipes["splitter"].enabled = true
--- player.force.recipes["fast-splitter"].enabled = true
--- player.force.recipes["underground-belt"].enabled = true
--- player.force.recipes["fast-transport-belt"].enabled = true
--- player.force.recipes["fast-underground-belt"].enabled = true
--- player.force.recipes["long-handed-inserter"].enabled = true
--- player.force.recipes["fast-inserter"].enabled = true
--- player.force.recipes["steel-plate"].enabled = true
--- player.force.recipes["steel-furnace"].enabled = true
--- player.force.recipes["engine-unit"].enabled = true
--- player.force.recipes["stack-inserter"].enabled = true
--- player.force.recipes["rail"].enabled = true
--- player.force.recipes["rail-chain-signal"].enabled = true
--- player.force.recipes["rail-signal"].enabled = true
--- player.force.recipes["train-stop"].enabled = true
--- player.force.recipes["locomotive"].enabled = true
--- player.force.recipes["cargo-wagon"].enabled = true
--- player.force.recipes["fluid-wagon"].enabled = true
--- player.force.recipes["radar"].enabled = true
--- player.force.recipes["pump"].enabled = true
--- player.force.recipes["storage-tank"].enabled = true
--- player.force.recipes["big-electric-pole"].enabled = true
--- player.force.recipes["medium-electric-pole"].enabled = true
--- -- player.force.recipes["player-port"].enabled=true
--- player.force.recipes["green-wire"].enabled = true
--- player.force.recipes["red-wire"].enabled = true
--- player.force.recipes["oil-refinery"].enabled = true
--- player.force.recipes["pumpjack"].enabled = true
--- player.force.recipes["chemical-plant"].enabled = true
--- player.force.recipes["basic-oil-processing"].enabled = true
--- player.force.recipes["solid-fuel-from-heavy-oil"].enabled = true
--- player.force.recipes["solid-fuel-from-light-oil"].enabled = true
--- player.force.recipes["solid-fuel-from-petroleum-gas"].enabled = true
--- player.force.recipes["advanced-oil-processing"].enabled = true
--- player.force.recipes["light-oil-cracking"].enabled = true
--- player.force.recipes["heavy-oil-cracking"].enabled = true
--- player.force.recipes["plastic-bar"].enabled = true
--- player.force.recipes["advanced-circuit"].enabled = true
--- player.force.recipes["substation"].enabled = true
--- player.force.recipes["electric-furnace"].enabled = true
--- -- player.force.recipes["lubricant"].enabled = true
--- -- player.force.recipes["express-splitter"].enabled = true
--- -- player.force.recipes["express-transport-belt"].enabled = true
--- -- player.force.recipes["express-underground-belt"].enabled = true
--- player.force.recipes["sulfur"].enabled = true
--- player.force.recipes["sulfuric-acid"].enabled = true
--- player.force.recipes["battery"].enabled = true
--- player.force.recipes["laser-turret"].enabled = true
--- player.force.recipes["accumulator"].enabled = true
--- player.force.recipes["solar-panel"].enabled = true
--- player.force.recipes["small-lamp"].enabled = true
-
--- player.force.enable_all_recipes()
--- player.force.recipes["electric-energy-interface"].enabled = false
-
--- -- MMZ print section
--- for i = 1, 11 do
---   panel_positions={}
---   panel_positions[0]={player.position.x + 21, player.position.y - 19 + i * 3}
---   panel_positions[1]={player.position.x + 24, player.position.y - 19 + i * 3}
---   panel_positions[2]={player.position.x + 27, player.position.y - 19 + i * 3}
---   panel_positions[3]={player.position.x + 30, player.position.y - 19 + i * 3}
---   panel_positions[4]={player.position.x + 33, player.position.y - 19 + i * 3}
---   panel_positions[5]={player.position.x + 38, player.position.y - 19 + i * 3}
---   panel_positions[6]={player.position.x + 41, player.position.y - 19 + i * 3}
---   panel_positions[7]={player.position.x + 44, player.position.y - 19 + i * 3}
---   panel_positions[8]={player.position.x + 47, player.position.y - 19 + i * 3}
---   panel_positions[9]={player.position.x + 50, player.position.y - 19 + i * 3}
---   panel_positions[10]={player.position.x - 22, player.position.y - 19 + i * 3}
---   panel_positions[11]={player.position.x - 25, player.position.y - 19 + i * 3}
---   panel_positions[12]={player.position.x - 28, player.position.y - 19 + i * 3}
---   panel_positions[13]={player.position.x - 31, player.position.y - 19 + i * 3}
---   panel_positions[14]={player.position.x - 34, player.position.y - 19 + i * 3}
---   panel_positions[15]={player.position.x - 39, player.position.y - 19 + i * 3}
---   panel_positions[16]={player.position.x - 42, player.position.y - 19 + i * 3}
---   panel_positions[17]={player.position.x - 45, player.position.y - 19 + i * 3}
---   panel_positions[18]={player.position.x - 48, player.position.y - 19 + i * 3}
---   panel_positions[19]={player.position.x - 51, player.position.y - 19 + i * 3}
---   panel_positions[20]={player.position.x - 19 + i * 3, player.position.y - 22}
---   panel_positions[21]={player.position.x - 19 + i * 3, player.position.y - 25}
---   panel_positions[22]={player.position.x - 19 + i * 3, player.position.y - 28}
---   panel_positions[23]={player.position.x - 19 + i * 3, player.position.y - 31}
---   panel_positions[24]={player.position.x - 19 + i * 3, player.position.y - 34}
---   panel_positions[25]={player.position.x - 19 + i * 3, player.position.y - 39}
---   panel_positions[26]={player.position.x - 19 + i * 3, player.position.y - 42}
---   panel_positions[27]={player.position.x - 19 + i * 3, player.position.y - 45}
---   panel_positions[28]={player.position.x - 19 + i * 3, player.position.y - 48}
---   panel_positions[29]={player.position.x - 19 + i * 3, player.position.y - 51}
---   panel_positions[30]={player.position.x - 19 + i * 3, player.position.y + 21}
---   panel_positions[31]={player.position.x - 19 + i * 3, player.position.y + 24}
---   panel_positions[32]={player.position.x - 19 + i * 3, player.position.y + 27}
---   panel_positions[33]={player.position.x - 19 + i * 3, player.position.y + 30}
---   panel_positions[34]={player.position.x - 19 + i * 3, player.position.y + 33}
---   panel_positions[35]={player.position.x - 19 + i * 3, player.position.y + 38}
---   panel_positions[36]={player.position.x - 19 + i * 3, player.position.y + 41}
---   panel_positions[37]={player.position.x - 19 + i * 3, player.position.y + 44}
---   panel_positions[38]={player.position.x - 19 + i * 3, player.position.y + 47}
---   panel_positions[39]={player.position.x - 19 + i * 3, player.position.y + 50}
-
---   for j =0, 39 do
---       init_spanel = player.surface.create_entity({
---           name = "solar-panel",
---           force = player.force,
---           amount = 1,
---           position = panel_positions[j]
---         })
---       init_spanel.minable = false
---       init_spanel.destructible = false
---   end
--- end
-
--- -- Make player ghost 
--- local character = player.character
--- player.character = nil
--- if character then
---     character.destroy()
--- end
-
---  -- Admin can revive without has_items_inside
--- if (player.admin == true) then
---   placed_entity = ghostEntities[i].silent_revive()
---   if placed_entity ~=nil then
---       placed_entity.destructible = false
---   end
---   if ((inventoryContents[ghostName] ~= nil) and (inventoryContents[ghostName] > 0)) then
---     if placed_entity ~=nil then
---       inventoryContents[ghostName] = inventoryContents[ghostName] - 1;
---       playerInventory.remove {
---           name = ghostName,
---           count = 1
---       }
---     end
---   end
--- else
