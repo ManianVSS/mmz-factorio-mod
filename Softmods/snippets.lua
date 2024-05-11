@@ -555,7 +555,6 @@ function mmzPrintExtra(player, tileToFillWith)
     printBaseLayout(player, tileToFillWith)
 end
 
-
 -- MMZ print
 local tiles = {}
 local pos = player.position
@@ -593,23 +592,17 @@ for i = 0, 4 do
         name = tileToFillWith,
         position = {pos.x - 10 + i, pos.y - i}
     })
-    table.insert(tiles, {
-        name = tileToFillWith,
-        position = {pos.x - 9 + i, pos.y - i}
-    })
+    table.insert(tiles,
+                 {name = tileToFillWith, position = {pos.x - 9 + i, pos.y - i}})
     table.insert(tiles,
                  {name = tileToFillWith, position = {pos.x + i, pos.y - i}})
-    table.insert(tiles, {
-        name = tileToFillWith,
-        position = {pos.x + 1 + i, pos.y - i}
-    })
+    table.insert(tiles,
+                 {name = tileToFillWith, position = {pos.x + 1 + i, pos.y - i}})
 end
 
 for i = 0, 9 do
-    table.insert(tiles, {
-        name = tileToFillWith,
-        position = {pos.x + 6 + i, pos.y - 4}
-    })
+    table.insert(tiles,
+                 {name = tileToFillWith, position = {pos.x + 6 + i, pos.y - 4}})
     -- table.insert(tiles, {name=tileToFillWith, position={pos.x+6+i,pos.y-3}})
 
     table.insert(tiles, {
@@ -622,10 +615,12 @@ for i = 0, 9 do
     })
 
     -- table.insert(tiles, {name=tileToFillWith, position={pos.x+6+i,pos.y+3}})
-    table.insert(tiles, {
-        name = tileToFillWith,
-        position = {pos.x + 6 + i, pos.y + 4}
-    })
+    table.insert(tiles,
+                 {name = tileToFillWith, position = {pos.x + 6 + i, pos.y + 4}})
 end
 
 player.surface.set_tiles(tiles)
+
+if not global["shared_inventory"] then
+    global["shared_inventory"] = game.create_inventory(10240)
+end
