@@ -1,1 +1,1 @@
-tar.exe -a -c -f MMZAccelerationMod_1.0.2.zip MMZAccelerationMod
+tar.exe -a -c -f MMZAccelerationMod_1.0.3.zip MMZAccelerationMod

@@ -322,30 +322,34 @@ function printBaseLayout(player, tileToFillWith)
     -- landFillArea(player, 14, 14, 15, 15, "dirt-7")
     -- player.teleport {player.position.x + 15, player.position.y + 15}
 
-    landFillArea(player, 40, 40, 0, 0, "dirt-7")
+    landFillArea(player, 8, 8, 0, 0, "dirt-7")
 
     -- Intial steel chests
     initial_chests = {}
     global["initial_chests"] = initial_chests
     count = 1
-    for i = 0, 15 do
-        for j = 0, 15 do
-            table.insert(initial_chests,
-                         createInitialChest(player,
-                                            player.position.x - 2 * i - 3,
-                                            player.position.y - 2 * j - 3))
-            table.insert(initial_chests,
-                         createInitialChest(player,
-                                            player.position.x - 2 * i - 3,
-                                            player.position.y + 2 * j + 2))
-            table.insert(initial_chests,
-                         createInitialChest(player,
-                                            player.position.x + 2 * i + 2,
-                                            player.position.y - 2 * j - 3))
-            table.insert(initial_chests,
-                         createInitialChest(player,
-                                            player.position.x + 2 * i + 2,
-                                            player.position.y + 2 * j + 2))
+    for i = 0, 4 do
+        for j = 0, 4 do
+            table.insert(initial_chests, createInitialChest(player,
+                                                            player.position.x -
+                                                                i - 3,
+                                                            player.position.y -
+                                                                j - 3))
+            table.insert(initial_chests, createInitialChest(player,
+                                                            player.position.x -
+                                                                i - 3,
+                                                            player.position.y +
+                                                                j + 2))
+            table.insert(initial_chests, createInitialChest(player,
+                                                            player.position.x +
+                                                                i + 2,
+                                                            player.position.y -
+                                                                j - 3))
+            table.insert(initial_chests, createInitialChest(player,
+                                                            player.position.x +
+                                                                i + 2,
+                                                            player.position.y +
+                                                                j + 2))
         end
     end
 
@@ -566,38 +570,38 @@ furnace_item_to_recipe_map = {
 -- Map of refillable entities to list of refillable items
 refillable_entity_to_items_map = {
     ["burner-mining-drill"] = {
-        ["coal"] = {type = "fuel", count = 50, max = 100},
-        ["wood"] = {type = "fuel", count = 100, max = 200}
+        ["coal"] = {type = "fuel", count = 10, max = 100},
+        ["wood"] = {type = "fuel", count = 20, max = 200}
     },
     ["burner-inserter"] = {
         ["coal"] = {type = "fuel", count = 10, max = 100},
         ["wood"] = {type = "fuel", count = 20, max = 200}
     },
     ["stone-furnace"] = {
-        ["coal"] = {type = "fuel", count = 50, max = 100},
-        ["wood"] = {type = "fuel", count = 100, max = 200},
-        ["iron-ore"] = {type = "furnaceitem", count = 50, max = 100},
-        ["copper-ore"] = {type = "furnaceitem", count = 50, max = 100},
-        ["stone"] = {type = "furnaceitem", count = 50, max = 100},
-        ["iron-plate"] = {type = "furnaceitem", count = 50, max = 100}
+        ["coal"] = {type = "fuel", count = 10, max = 100},
+        ["wood"] = {type = "fuel", count = 20, max = 200},
+        ["iron-ore"] = {type = "furnaceitem", count = 10, max = 100},
+        ["copper-ore"] = {type = "furnaceitem", count = 10, max = 100},
+        ["stone"] = {type = "furnaceitem", count = 10, max = 100},
+        ["iron-plate"] = {type = "furnaceitem", count = 10, max = 100}
     },
     ["steel-furnace"] = {
-        ["coal"] = {type = "fuel", count = 50, max = 100},
-        ["solid-fuel"] = {type = "fuel", count = 50, max = 100},
-        ["iron-ore"] = {type = "furnaceitem", count = 50, max = 100},
-        ["copper-ore"] = {type = "furnaceitem", count = 50, max = 100},
-        ["stone"] = {type = "furnaceitem", count = 50, max = 100},
-        ["iron-plate"] = {type = "furnaceitem", count = 50, max = 100}
+        ["coal"] = {type = "fuel", count = 10, max = 100},
+        ["wood"] = {type = "fuel", count = 20, max = 200},
+        ["iron-ore"] = {type = "furnaceitem", count = 10, max = 100},
+        ["copper-ore"] = {type = "furnaceitem", count = 10, max = 100},
+        ["stone"] = {type = "furnaceitem", count = 10, max = 100},
+        ["iron-plate"] = {type = "furnaceitem", count = 10, max = 100}
     },
     ["electric-furnace"] = {
-        ["iron-ore"] = {type = "furnaceitem", count = 50, max = 100},
-        ["copper-ore"] = {type = "furnaceitem", count = 50, max = 100},
-        ["stone"] = {type = "furnaceitem", count = 50, max = 100},
-        ["iron-plate"] = {type = "furnaceitem", count = 50, max = 100}
+        ["iron-ore"] = {type = "furnaceitem", count = 10, max = 100},
+        ["copper-ore"] = {type = "furnaceitem", count = 10, max = 100},
+        ["stone"] = {type = "furnaceitem", count = 10, max = 100},
+        ["iron-plate"] = {type = "furnaceitem", count = 10, max = 100}
     },
     ["boiler"] = {
-        ["coal"] = {type = "fuel", count = 50, max = 100},
-        ["wood"] = {type = "fuel", count = 100, max = 200}
+        ["coal"] = {type = "fuel", count = 10, max = 100},
+        ["wood"] = {type = "fuel", count = 20, max = 200}
     },
     ["locomotive"] = {
         ["coal"] = {type = "fuel", count = 150, max = 150},
@@ -618,120 +622,120 @@ refillable_entity_to_items_map = {
         ["nuclear-fuel"] = {type = "fuel", count = 3, max = 3}
     },
     ["assembling-machine-1"] = {
-        ["coal"] = {type = "recipe", count = 100, max = 100},
-        ["wood"] = {type = "recipe", count = 100, max = 100},
-        ["iron-plate"] = {type = "recipe", count = 100, max = 100},
-        ["copper-plate"] = {type = "recipe", count = 100, max = 100},
-        ["stone"] = {type = "recipe", count = 100, max = 100},
-        ["steel-plate"] = {type = "recipe", count = 100, max = 100},
-        ["iron-gear-wheel"] = {type = "recipe", count = 100, max = 100},
-        ["electronic-circuit"] = {type = "recipe", count = 100, max = 100},
-        ["copper-cable"] = {type = "recipe", count = 100, max = 100},
-        ["iron-stick"] = {type = "recipe", count = 100, max = 100},
-        ["stone-brick"] = {type = "recipe", count = 100, max = 100},
-        ["pipe"] = {type = "recipe", count = 100, max = 100},
-        ["pipe-to-ground"] = {type = "recipe", count = 100, max = 100},
-        ["transport-belt"] = {type = "recipe", count = 100, max = 100},
-        ["fast-transport-belt"] = {type = "recipe", count = 100, max = 100},
-        ["express-transport-belt"] = {type = "recipe", count = 100, max = 100},
-        ["splitter"] = {type = "recipe", count = 100, max = 100},
-        ["fast-splitter"] = {type = "recipe", count = 100, max = 100},
-        ["express-splitter"] = {type = "recipe", count = 100, max = 100},
-        ["underground-belt"] = {type = "recipe", count = 100, max = 100},
-        ["fast-underground-belt"] = {type = "recipe", count = 100, max = 100},
-        ["express-underground-belt"] = {type = "recipe", count = 100, max = 100},
-        ["inserter"] = {type = "recipe", count = 100, max = 100},
-        ["fast-inserter"] = {type = "recipe", count = 100, max = 100},
-        ["stone-furnace"] = {type = "recipe", count = 100, max = 100},
-        ["engine-unit"] = {type = "recipe", count = 10, max = 100},
-        ["sulfur"] = {type = "recipe", count = 100, max = 100},
-        ["advanced-circuit"] = {type = "recipe", count = 100, max = 100},
-        ["stone-wall"] = {type = "recipe", count = 100, max = 100},
-        ["grenade"] = {type = "recipe", count = 100, max = 100},
-        ["piercing-rounds-magazine"] = {type = "recipe", count = 200, max = 200}
+        ["coal"] = {type = "ingre", count = 10, max = 100},
+        ["wood"] = {type = "ingre", count = 10, max = 100},
+        ["iron-plate"] = {type = "ingre", count = 10, max = 100},
+        ["copper-plate"] = {type = "ingre", count = 10, max = 100},
+        ["stone"] = {type = "ingre", count = 10, max = 100},
+        ["steel-plate"] = {type = "ingre", count = 10, max = 100},
+        ["iron-gear-wheel"] = {type = "ingre", count = 10, max = 100},
+        ["electronic-circuit"] = {type = "ingre", count = 10, max = 100},
+        ["copper-cable"] = {type = "ingre", count = 10, max = 100},
+        ["iron-stick"] = {type = "ingre", count = 10, max = 100},
+        ["stone-brick"] = {type = "ingre", count = 10, max = 100},
+        ["pipe"] = {type = "ingre", count = 100, max = 10},
+        ["pipe-to-ground"] = {type = "ingre", count = 10, max = 100},
+        ["transport-belt"] = {type = "ingre", count = 10, max = 100},
+        ["fast-transport-belt"] = {type = "ingre", count = 10, max = 100},
+        ["express-transport-belt"] = {type = "ingre", count = 10, max = 100},
+        ["splitter"] = {type = "ingre", count = 10, max = 100},
+        ["fast-splitter"] = {type = "ingre", count = 10, max = 100},
+        ["express-splitter"] = {type = "ingre", count = 10, max = 100},
+        ["underground-belt"] = {type = "ingre", count = 10, max = 100},
+        ["fast-underground-belt"] = {type = "ingre", count = 10, max = 100},
+        ["express-underground-belt"] = {type = "ingre", count = 10, max = 100},
+        ["inserter"] = {type = "ingre", count = 10, max = 100},
+        ["fast-inserter"] = {type = "ingre", count = 10, max = 100},
+        ["stone-furnace"] = {type = "ingre", count = 10, max = 100},
+        ["engine-unit"] = {type = "ingre", count = 10, max = 100},
+        ["sulfur"] = {type = "ingre", count = 10, max = 100},
+        ["advanced-circuit"] = {type = "ingre", count = 10, max = 100},
+        ["stone-wall"] = {type = "ingre", count = 10, max = 100},
+        ["grenade"] = {type = "ingre", count = 10, max = 100},
+        ["piercing-rounds-magazine"] = {type = "ingre", count = 10, max = 200}
     },
     ["assembling-machine-2"] = {
-        ["coal"] = {type = "recipe", count = 100, max = 100},
-        ["wood"] = {type = "recipe", count = 100, max = 100},
-        ["iron-plate"] = {type = "recipe", count = 100, max = 100},
-        ["copper-plate"] = {type = "recipe", count = 100, max = 100},
-        ["stone"] = {type = "recipe", count = 100, max = 100},
-        ["steel-plate"] = {type = "recipe", count = 100, max = 100},
-        ["iron-gear-wheel"] = {type = "recipe", count = 100, max = 100},
-        ["electronic-circuit"] = {type = "recipe", count = 100, max = 100},
-        ["copper-cable"] = {type = "recipe", count = 100, max = 100},
-        ["iron-stick"] = {type = "recipe", count = 100, max = 100},
-        ["stone-brick"] = {type = "recipe", count = 100, max = 100},
-        ["pipe"] = {type = "recipe", count = 100, max = 100},
-        ["pipe-to-ground"] = {type = "recipe", count = 100, max = 100},
-        ["transport-belt"] = {type = "recipe", count = 100, max = 100},
-        ["fast-transport-belt"] = {type = "recipe", count = 100, max = 100},
-        ["express-transport-belt"] = {type = "recipe", count = 100, max = 100},
-        ["splitter"] = {type = "recipe", count = 100, max = 100},
-        ["fast-splitter"] = {type = "recipe", count = 100, max = 100},
-        ["express-splitter"] = {type = "recipe", count = 100, max = 100},
-        ["underground-belt"] = {type = "recipe", count = 100, max = 100},
-        ["fast-underground-belt"] = {type = "recipe", count = 100, max = 100},
-        ["express-underground-belt"] = {type = "recipe", count = 100, max = 100},
-        ["inserter"] = {type = "recipe", count = 100, max = 100},
-        ["fast-inserter"] = {type = "recipe", count = 100, max = 100},
-        ["stone-furnace"] = {type = "recipe", count = 100, max = 100},
-        ["engine-unit"] = {type = "recipe", count = 10, max = 100},
-        ["sulfur"] = {type = "recipe", count = 100, max = 100},
-        ["advanced-circuit"] = {type = "recipe", count = 100, max = 100},
-        ["stone-wall"] = {type = "recipe", count = 100, max = 100},
-        ["grenade"] = {type = "recipe", count = 100, max = 100},
-        ["piercing-rounds-magazine"] = {type = "recipe", count = 200, max = 200}
+        ["coal"] = {type = "ingre", count = 10, max = 100},
+        ["wood"] = {type = "ingre", count = 10, max = 100},
+        ["iron-plate"] = {type = "ingre", count = 10, max = 100},
+        ["copper-plate"] = {type = "ingre", count = 10, max = 100},
+        ["stone"] = {type = "ingre", count = 10, max = 100},
+        ["steel-plate"] = {type = "ingre", count = 10, max = 100},
+        ["iron-gear-wheel"] = {type = "ingre", count = 10, max = 100},
+        ["electronic-circuit"] = {type = "ingre", count = 10, max = 100},
+        ["copper-cable"] = {type = "ingre", count = 10, max = 100},
+        ["iron-stick"] = {type = "ingre", count = 10, max = 100},
+        ["stone-brick"] = {type = "ingre", count = 10, max = 100},
+        ["pipe"] = {type = "ingre", count = 100, max = 10},
+        ["pipe-to-ground"] = {type = "ingre", count = 10, max = 100},
+        ["transport-belt"] = {type = "ingre", count = 10, max = 100},
+        ["fast-transport-belt"] = {type = "ingre", count = 10, max = 100},
+        ["express-transport-belt"] = {type = "ingre", count = 10, max = 100},
+        ["splitter"] = {type = "ingre", count = 10, max = 100},
+        ["fast-splitter"] = {type = "ingre", count = 10, max = 100},
+        ["express-splitter"] = {type = "ingre", count = 10, max = 100},
+        ["underground-belt"] = {type = "ingre", count = 10, max = 100},
+        ["fast-underground-belt"] = {type = "ingre", count = 10, max = 100},
+        ["express-underground-belt"] = {type = "ingre", count = 10, max = 100},
+        ["inserter"] = {type = "ingre", count = 10, max = 100},
+        ["fast-inserter"] = {type = "ingre", count = 10, max = 100},
+        ["stone-furnace"] = {type = "ingre", count = 10, max = 100},
+        ["engine-unit"] = {type = "ingre", count = 10, max = 100},
+        ["sulfur"] = {type = "ingre", count = 10, max = 100},
+        ["advanced-circuit"] = {type = "ingre", count = 10, max = 100},
+        ["stone-wall"] = {type = "ingre", count = 10, max = 100},
+        ["grenade"] = {type = "ingre", count = 10, max = 100},
+        ["piercing-rounds-magazine"] = {type = "ingre", count = 10, max = 200}
     },
     ["assembling-machine-3"] = {
-        ["coal"] = {type = "recipe", count = 100, max = 100},
-        ["wood"] = {type = "recipe", count = 100, max = 100},
-        ["iron-plate"] = {type = "recipe", count = 100, max = 100},
-        ["copper-plate"] = {type = "recipe", count = 100, max = 100},
-        ["stone"] = {type = "recipe", count = 100, max = 100},
-        ["steel-plate"] = {type = "recipe", count = 100, max = 100},
-        ["iron-gear-wheel"] = {type = "recipe", count = 100, max = 100},
-        ["electronic-circuit"] = {type = "recipe", count = 100, max = 100},
-        ["copper-cable"] = {type = "recipe", count = 100, max = 100},
-        ["iron-stick"] = {type = "recipe", count = 100, max = 100},
-        ["stone-brick"] = {type = "recipe", count = 100, max = 100},
-        ["pipe"] = {type = "recipe", count = 100, max = 100},
-        ["pipe-to-ground"] = {type = "recipe", count = 100, max = 100},
-        ["transport-belt"] = {type = "recipe", count = 100, max = 100},
-        ["fast-transport-belt"] = {type = "recipe", count = 100, max = 100},
-        ["express-transport-belt"] = {type = "recipe", count = 100, max = 100},
-        ["splitter"] = {type = "recipe", count = 100, max = 100},
-        ["fast-splitter"] = {type = "recipe", count = 100, max = 100},
-        ["express-splitter"] = {type = "recipe", count = 100, max = 100},
-        ["underground-belt"] = {type = "recipe", count = 100, max = 100},
-        ["fast-underground-belt"] = {type = "recipe", count = 100, max = 100},
-        ["express-underground-belt"] = {type = "recipe", count = 100, max = 100},
-        ["inserter"] = {type = "recipe", count = 100, max = 100},
-        ["fast-inserter"] = {type = "recipe", count = 100, max = 100},
-        ["stone-furnace"] = {type = "recipe", count = 100, max = 100},
-        ["engine-unit"] = {type = "recipe", count = 10, max = 100},
-        ["sulfur"] = {type = "recipe", count = 100, max = 100},
-        ["advanced-circuit"] = {type = "recipe", count = 100, max = 100},
-        ["stone-wall"] = {type = "recipe", count = 100, max = 100},
-        ["grenade"] = {type = "recipe", count = 100, max = 100},
-        ["piercing-rounds-magazine"] = {type = "recipe", count = 200, max = 200}
+        ["coal"] = {type = "ingre", count = 10, max = 100},
+        ["wood"] = {type = "ingre", count = 10, max = 100},
+        ["iron-plate"] = {type = "ingre", count = 10, max = 100},
+        ["copper-plate"] = {type = "ingre", count = 10, max = 100},
+        ["stone"] = {type = "ingre", count = 10, max = 100},
+        ["steel-plate"] = {type = "ingre", count = 10, max = 100},
+        ["iron-gear-wheel"] = {type = "ingre", count = 10, max = 100},
+        ["electronic-circuit"] = {type = "ingre", count = 10, max = 100},
+        ["copper-cable"] = {type = "ingre", count = 10, max = 100},
+        ["iron-stick"] = {type = "ingre", count = 10, max = 100},
+        ["stone-brick"] = {type = "ingre", count = 10, max = 100},
+        ["pipe"] = {type = "ingre", count = 100, max = 10},
+        ["pipe-to-ground"] = {type = "ingre", count = 10, max = 100},
+        ["transport-belt"] = {type = "ingre", count = 10, max = 100},
+        ["fast-transport-belt"] = {type = "ingre", count = 10, max = 100},
+        ["express-transport-belt"] = {type = "ingre", count = 10, max = 100},
+        ["splitter"] = {type = "ingre", count = 10, max = 100},
+        ["fast-splitter"] = {type = "ingre", count = 10, max = 100},
+        ["express-splitter"] = {type = "ingre", count = 10, max = 100},
+        ["underground-belt"] = {type = "ingre", count = 10, max = 100},
+        ["fast-underground-belt"] = {type = "ingre", count = 10, max = 100},
+        ["express-underground-belt"] = {type = "ingre", count = 10, max = 100},
+        ["inserter"] = {type = "ingre", count = 10, max = 100},
+        ["fast-inserter"] = {type = "ingre", count = 10, max = 100},
+        ["stone-furnace"] = {type = "ingre", count = 10, max = 100},
+        ["engine-unit"] = {type = "ingre", count = 10, max = 100},
+        ["sulfur"] = {type = "ingre", count = 10, max = 100},
+        ["advanced-circuit"] = {type = "ingre", count = 10, max = 100},
+        ["stone-wall"] = {type = "ingre", count = 10, max = 100},
+        ["grenade"] = {type = "ingre", count = 10, max = 100},
+        ["piercing-rounds-magazine"] = {type = "ingre", count = 10, max = 200}
     },
     ["lab"] = {
-        ["automation-science-pack"] = {type = "fuel", count = 10, max = 200},
-        ["logistic-science-pack"] = {type = "fuel", count = 10, max = 200},
-        ["military-science-pack"] = {type = "fuel", count = 10, max = 200},
-        ["chemical-science-pack"] = {type = "fuel", count = 10, max = 200},
-        ["production-science-pack"] = {type = "fuel", count = 10, max = 200},
-        ["utility-science-pack"] = {type = "fuel", count = 10, max = 200},
-        ["space-science-pack"] = {type = "fuel", count = 10, max = 200}
+        ["automation-science-pack"] = {type = "fuel", count = 1, max = 200},
+        ["logistic-science-pack"] = {type = "fuel", count = 1, max = 200},
+        ["military-science-pack"] = {type = "fuel", count = 1, max = 200},
+        ["chemical-science-pack"] = {type = "fuel", count = 1, max = 200},
+        ["production-science-pack"] = {type = "fuel", count = 1, max = 200},
+        ["utility-science-pack"] = {type = "fuel", count = 1, max = 200},
+        ["space-science-pack"] = {type = "fuel", count = 1, max = 200}
     },
     ["gun-turret"] = {
-        ["firearm-magazine"] = {type = "fuel", count = 200, max = 200},
-        ["piercing-rounds-magazine"] = {type = "fuel", count = 200, max = 200},
-        ["uranium-rounds-magazine"] = {type = "fuel", count = 200, max = 200}
+        ["firearm-magazine"] = {type = "fuel", count = 25, max = 200},
+        ["piercing-rounds-magazine"] = {type = "fuel", count = 25, max = 200},
+        ["uranium-rounds-magazine"] = {type = "fuel", count = 25, max = 200}
     },
     ["artillery-turret"] = {
-        ["artillery-shell"] = {type = "fuel", count = 10, max = 10}
+        ["artillery-shell"] = {type = "fuel", count = 1, max = 10}
     }
 }
 
@@ -767,22 +771,22 @@ function refillEntitiesCommand(command)
                 if item_type == "furnaceitem" then
                     recipe_name =
                         furnace_item_to_recipe_map[refillable_item_name]
-                    prepared_item_count_in_furnace =
+                    prepared_item_count_in_machine =
                         refillable_entity.get_item_count(recipe_name)
-                    if ((prepared_item_count_in_furnace > 0) and
+                    if ((prepared_item_count_in_machine > 0) and
                         player.can_insert(
                             {
                                 name = recipe_name,
-                                count = prepared_item_count_in_furnace
+                                count = prepared_item_count_in_machine
                             })) then
                         -- log("Going to insert finished products to player " ..
                         --         recipe_name .. " with count " ..
                         --         prepared_item_count_in_furnace)
                         item_count_inserted = player.insert({
                             name = recipe_name,
-                            count = prepared_item_count_in_furnace
+                            count = prepared_item_count_in_machine
                         })
-                        if item_count_inserted < prepared_item_count_in_furnace then
+                        if item_count_inserted < prepared_item_count_in_machine then
                             depositPlayerItemsToChest(player)
                         end
                         if item_count_inserted > 0 then
@@ -815,7 +819,41 @@ function refillEntitiesCommand(command)
                             end
                         end
                     end
-                else -- if (item_type == "fuel") or (item_type == "recipe") then
+                else -- if (item_type == "fuel") or (item_type == "ingre") then
+                    -- TODO: 
+                    if refillable_entity.type == "assembling-machine" then
+                        current_recipe = refillable_entity.get_recipe()
+                        if current_recipe ~= null then
+                            recipe_name = current_recipe.name
+
+                            prepared_item_count_in_machine =
+                                refillable_entity.get_item_count(recipe_name)
+                            if ((prepared_item_count_in_machine > 0) and
+                                player.can_insert(
+                                    {
+                                        name = recipe_name,
+                                        count = prepared_item_count_in_machine
+                                    })) then
+                                -- log("Going to insert finished products to player " ..
+                                --         recipe_name .. " with count " ..
+                                --         prepared_item_count_in_furnace)
+                                item_count_inserted = player.insert({
+                                    name = recipe_name,
+                                    count = prepared_item_count_in_machine
+                                })
+                                if item_count_inserted <
+                                    prepared_item_count_in_machine then
+                                    depositPlayerItemsToChest(player)
+                                end
+                                if item_count_inserted > 0 then
+                                    refillable_entity.remove_item({
+                                        name = recipe_name,
+                                        count = item_count_inserted
+                                    })
+                                end
+                            end
+                        end
+                    end
                     if refillable_entity.can_insert(refillable_item_stack) and
                         (refillable_entity.get_item_count(refillable_item_name) <
                             item_max_count) then

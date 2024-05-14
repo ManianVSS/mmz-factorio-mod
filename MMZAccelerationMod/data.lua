@@ -1,41 +1,53 @@
 data.raw["mining-drill"]["electric-mining-drill"].mining_speed = 5
 data.raw["mining-drill"]["electric-mining-drill"].energy_usage = "900kW"
-data.raw["mining-drill"]["electric-mining-drill"].resource_searching_radius = 25
+data.raw["mining-drill"]["electric-mining-drill"].mining_speed = 5
+data.raw["mining-drill"]["electric-mining-drill"]["energy_source"].emissions_per_minute = 100
 
 data.raw["mining-drill"]["burner-mining-drill"].mining_speed = 2.5
 data.raw["mining-drill"]["burner-mining-drill"].energy_usage = "1500kW"
 data.raw["mining-drill"]["burner-mining-drill"].resource_searching_radius = 10
+data.raw["mining-drill"]["burner-mining-drill"]["energy_source"].emissions_per_minute = 120
 
 data.raw["mining-drill"]["pumpjack"].mining_speed = 10
 data.raw["mining-drill"]["pumpjack"].energy_usage = "900kW"
 data.raw["mining-drill"]["pumpjack"].resource_searching_radius = 5
+data.raw["mining-drill"]["pumpjack"]["energy_source"].emissions_per_minute = 100
 
 data.raw["furnace"]["stone-furnace"].crafting_speed = 10
 data.raw["furnace"]["stone-furnace"].energy_usage = "900kW"
+data.raw["furnace"]["stone-furnace"]["energy_source"].emissions_per_minute = 20
 
 data.raw["furnace"]["steel-furnace"].crafting_speed = 20
 data.raw["furnace"]["steel-furnace"].energy_usage = "900kW"
+data.raw["furnace"]["steel-furnace"]["energy_source"].emissions_per_minute = 40
 
 data.raw["furnace"]["electric-furnace"].crafting_speed = 20
 data.raw["furnace"]["electric-furnace"].energy_usage = "1800kW"
+data.raw["furnace"]["electric-furnace"]["energy_source"].emissions_per_minute = 10
 
 data.raw["assembling-machine"]["assembling-machine-1"].crafting_speed = 5
 data.raw["assembling-machine"]["assembling-machine-1"].energy_usage = "750kW"
+data.raw["assembling-machine"]["assembling-machine-1"]["energy_source"].emissions_per_minute = 40
 
 data.raw["assembling-machine"]["assembling-machine-2"].crafting_speed = 7.5
 data.raw["assembling-machine"]["assembling-machine-2"].energy_usage = "1500kW"
+data.raw["assembling-machine"]["assembling-machine-2"]["energy_source"].emissions_per_minute = 30
 
 data.raw["assembling-machine"]["assembling-machine-3"].crafting_speed = 12.5
 data.raw["assembling-machine"]["assembling-machine-3"].energy_usage = "3750kW"
+data.raw["assembling-machine"]["assembling-machine-3"]["energy_source"].emissions_per_minute = 20
 
 data.raw["assembling-machine"]["oil-refinery"].crafting_speed = 10
 data.raw["assembling-machine"]["oil-refinery"].energy_usage = "4200kW"
+data.raw["assembling-machine"]["oil-refinery"]["energy_source"].emissions_per_minute = 60
 
 data.raw["assembling-machine"]["chemical-plant"].crafting_speed = 10
 data.raw["assembling-machine"]["chemical-plant"].energy_usage = "2100kW"
+data.raw["assembling-machine"]["chemical-plant"]["energy_source"].emissions_per_minute = 40
 
 data.raw["assembling-machine"]["centrifuge"].crafting_speed = 10
 data.raw["assembling-machine"]["centrifuge"].energy_usage = "3500kW"
+data.raw["assembling-machine"]["centrifuge"]["energy_source"].emissions_per_minute = 40
 
 data.raw["generator"]["steam-engine"].maximum_temperature = 660
 data.raw["generator"]["steam-turbine"].maximum_temperature = 1000
@@ -46,6 +58,7 @@ data.raw["accumulator"]["accumulator"]["energy_source"].output_flow_limit = "120
 
 data.raw["boiler"]["boiler"].target_temperature = 660
 data.raw["boiler"]["boiler"].energy_consumption = "9MW"
+data.raw["boiler"]["boiler"]["energy_source"].emissions_per_minute = 300
 data.raw["boiler"]["heat-exchanger"].target_temperature = 1000
 data.raw["boiler"]["heat-exchanger"].energy_consumption = "20MW"
 
@@ -127,7 +140,7 @@ data.raw["inserter"]["filter-inserter"].rotation_speed = 0.08
 -- data.raw["item"]["stone-brick"].stack_size = 1000
 -- data.raw["item"]["steel-plate"].stack_size = 1000
 
-data.raw["offshore-pump"]["offshore-pump"].pumping_speed = 200
+data.raw["offshore-pump"]["offshore-pump"].pumping_speed = 40
 data.raw["pump"]["pump"].energy_usage = "290kW"
 data.raw["pump"]["pump"].pumping_speed = 2000
 data.raw["storage-tank"]["storage-tank"]["fluid_box"].base_area = 2500
