@@ -886,13 +886,16 @@ depositable_items_list = {
     "steel-plate", "automation-science-pack", "logistic-science-pack",
     "military-science-pack", "chemical-science-pack", "production-science-pack",
     "utility-science-pack", "space-science-pack", "iron-gear-wheel",
-    "electronic-circuit", "copper-cable", "iron-stick", "pipe",
-    "pipe-to-ground", "transport-belt", "fast-transport-belt",
-    "express-transport-belt", "splitter", "fast-splitter", "express-splitter",
-    "underground-belt", "fast-underground-belt", "express-underground-belt",
-    "inserter", "fast-inserter", "stone-furnace", "engine-unit", "sulfur",
-    "advanced-circuit", "stone-wall", "grenade", "firearm-magazine",
-    "piercing-rounds-magazine", "uranium-rounds-magazine", "artillery-shell"
+    "electronic-circuit", "copper-cable", "iron-stick",
+    --  "pipe",
+    -- "pipe-to-ground", "transport-belt", "fast-transport-belt",
+    -- "express-transport-belt", "splitter", "fast-splitter", "express-splitter",
+    -- "underground-belt", "fast-underground-belt", "express-underground-belt",
+    -- "inserter", "fast-inserter",
+     "stone-furnace", "engine-unit", "sulfur",
+    "advanced-circuit", 
+    -- "stone-wall", "grenade", "firearm-magazine"
+    -- "piercing-rounds-magazine", "uranium-rounds-magazine", "artillery-shell"
 }
 
 function depositPlayerItemsToChest(player)

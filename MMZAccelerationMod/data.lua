@@ -1,16 +1,17 @@
 data.raw["mining-drill"]["electric-mining-drill"].mining_speed = 5
 data.raw["mining-drill"]["electric-mining-drill"].energy_usage = "900kW"
 data.raw["mining-drill"]["electric-mining-drill"].mining_speed = 5
+data.raw["mining-drill"]["burner-mining-drill"].resource_searching_radius = 5
 data.raw["mining-drill"]["electric-mining-drill"]["energy_source"].emissions_per_minute = 100
 
 data.raw["mining-drill"]["burner-mining-drill"].mining_speed = 2.5
 data.raw["mining-drill"]["burner-mining-drill"].energy_usage = "1500kW"
-data.raw["mining-drill"]["burner-mining-drill"].resource_searching_radius = 10
+data.raw["mining-drill"]["burner-mining-drill"].resource_searching_radius = 2.5
 data.raw["mining-drill"]["burner-mining-drill"]["energy_source"].emissions_per_minute = 120
 
 data.raw["mining-drill"]["pumpjack"].mining_speed = 10
 data.raw["mining-drill"]["pumpjack"].energy_usage = "900kW"
-data.raw["mining-drill"]["pumpjack"].resource_searching_radius = 5
+data.raw["mining-drill"]["pumpjack"].resource_searching_radius = 10
 data.raw["mining-drill"]["pumpjack"]["energy_source"].emissions_per_minute = 100
 
 data.raw["furnace"]["stone-furnace"].crafting_speed = 10
