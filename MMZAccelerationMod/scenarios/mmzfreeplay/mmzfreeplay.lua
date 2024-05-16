@@ -42,14 +42,14 @@ function soft_mod_setup(player)
         global["_aegis_on"] = false
         player.force.research_queue_enabled = true
 
-        player.force.set_ammo_damage_modifier("bullet", 10)
-        player.force.set_gun_speed_modifier("bullet", 10)
-        player.force.set_turret_attack_modifier("gun-turret", 10)
+        player.force.set_ammo_damage_modifier("bullet", 1)
+        player.force.set_gun_speed_modifier("bullet", 1)
+        -- player.force.set_turret_attack_modifier("gun-turret", 10)
 
         player.force.character_inventory_slots_bonus = player.force
                                                            .character_inventory_slots_bonus +
                                                            150
-        player.force.character_running_speed_modifier = 3
+        player.force.character_running_speed_modifier = 1.5
         -- player.force.manual_mining_speed_modifier = 100
         player.force.character_build_distance_bonus = 5000
         player.force.character_item_drop_distance_bonus = 5000
@@ -67,7 +67,7 @@ function soft_mod_setup(player)
                                                           10000
         player.force.inserter_stack_size_bonus = 10
         player.force.stack_inserter_capacity_bonus = 20
-        player.force.laboratory_speed_modifier = 10
+        player.force.laboratory_speed_modifier = 1
         -- player.force.laboratory_productivity_bonus  = 10
         -- player.force.mining_drill_productivity_bonus = 10
         player.force.train_braking_force_bonus = 10
@@ -1348,23 +1348,23 @@ function add_Commands()
     commands.add_command("generateResources",
                          "[Admin Command]: Generates resources in an area.",
                          generateResourcesCommand)
-    -- commands.remove_command("blackDeath")
-    -- commands.add_command("blackDeath", "[Admin Command]: Kills all enemy entity on explored area.", blackDeathCommand)
+    commands.remove_command("blackDeath")
+    commands.add_command("blackDeath", "[Admin Command]: Kills all enemy entity on explored area.", blackDeathCommand)
     commands.remove_command("marcoPolo")
     commands.add_command("marcoPolo", "[Admin Command]: Explores a large area.",
                          marcoPoloCommand)
     commands.remove_command("aegis")
     commands.add_command("aegis", "[Admin Command]: Speeds up everything.",
                          aegisCommand)
-    -- commands.remove_command("enableAllTech")
-    -- commands.add_command("enableAllTech", "[Admin Command]: Unlocks all technologies.", enableAllTechCommand)
+    commands.remove_command("enableAllTech")
+    commands.add_command("enableAllTech", "[Admin Command]: Unlocks all technologies.", enableAllTechCommand)
     commands.remove_command("changeDiplomacy")
     commands.add_command("changeDiplomacy",
                          "[Admin Command]: Toggles diplomatic stance with enemy.",
                          changeDiplomacyCommand)
-    -- commands.remove_command("enableAllRecipes")
-    -- commands.add_command("enableAllRecipes", "[Admin Command]: Emables all recipes.", enableAllRecipesCommand)
-    -- m
+    commands.remove_command("enableAllRecipes")
+    commands.add_command("enableAllRecipes", "[Admin Command]: Emables all recipes.", enableAllRecipesCommand)
+    -- 
     -- commands.remove_command("mmzPrint")
     -- commands.add_command("mmzPrint",
     --                      "[Admin Command]: Prints the MMZ spawn base.",
