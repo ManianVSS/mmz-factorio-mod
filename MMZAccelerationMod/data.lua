@@ -1,21 +1,36 @@
--- data.raw["character"]["character"].max_health = 500
+data.raw["character"]["character"].max_health = 500
 data.raw["character"]["character"].healing_per_tick = 0.25
 data.raw["character"]["character"].collision_box = {{0, 0}, {0, 0}}
 data.raw["character"]["character"].crafting_categories = {
     "crafting", "basic-crafting", "advanced-crafting", "smelting",
     "centrifuging"
 }
--- data.raw["character"]["character"].inventory_size = 400
--- data.raw["character"]["character"].build_distance = 5000
--- -- data.raw["character"]["character"].drop_item_distance = 5000
--- data.raw["character"]["character"].reach_distance = 5000
--- -- data.raw["character"]["character"].item_pickup_distance = 10
--- -- data.raw["character"]["character"].loot_pickup_distance = 10
--- -- data.raw["character"]["character"].enter_vehicle_distance = 10
--- data.raw["character"]["character"].reach_resource_distance = 5000
+data.raw["character"]["character"].inventory_size = 150
+data.raw["character"]["character"].build_distance = 5000
+data.raw["character"]["character"].drop_item_distance = 5000
+data.raw["character"]["character"].reach_distance = 5000
+-- data.raw["character"]["character"].item_pickup_distance = 10
+-- data.raw["character"]["character"].loot_pickup_distance = 10
+-- data.raw["character"]["character"].enter_vehicle_distance = 10
+data.raw["character"]["character"].reach_resource_distance = 5000
 data.raw["character"]["character"].ticks_to_stay_in_combat = 200
--- data.raw["character"]["character"].running_speed = 1.5
--- data.raw["character"]["character"].mining_speed = 5
+data.raw["character"]["character"].running_speed = 1
+data.raw["character"]["character"].mining_speed = 10000
+
+data.raw["lab"]["lab"].energy_usage = "180kW"
+data.raw["lab"]["lab"].researching_speed = 3
+
+data.raw["construction-robot"]["construction-robot"].speed = 0.18
+data.raw["construction-robot"]["construction-robot"].max_payload_size = 3
+data.raw["construction-robot"]["construction-robot"].energy_per_move = "15kJ"
+data.raw["construction-robot"]["construction-robot"].max_energy = "4.5MJ"
+data.raw["construction-robot"]["construction-robot"].speed_multiplier_when_out_of_energy = 0.33
+
+data.raw["logistic-robot"]["logistic-robot"].speed = 0.15
+data.raw["logistic-robot"]["logistic-robot"].max_payload_size = 3
+data.raw["logistic-robot"]["logistic-robot"].energy_per_move = "15kJ"
+data.raw["logistic-robot"]["logistic-robot"].max_energy = "4.5MJ"
+data.raw["logistic-robot"]["logistic-robot"].speed_multiplier_when_out_of_energy = 0.33
 
 data.raw["ammo-turret"]["gun-turret"].rotation_speed = 0.045
 data.raw["ammo-turret"]["gun-turret"].preparing_speed = 0.24
@@ -25,13 +40,11 @@ data.raw["ammo-turret"]["gun-turret"].attacking_speed = 1.5
 -- data.raw["ammo-turret"]["gun-turret"].call_for_help_radius = 120
 data.raw["ammo-turret"]["gun-turret"]["attack_parameters"].range = 54
 
-
 data.raw["electric-turret"]["laser-turret"].rotation_speed = 0.03
 data.raw["electric-turret"]["laser-turret"].preparing_speed = 0.15
 data.raw["electric-turret"]["laser-turret"].folding_speed = 0.15
 -- data.raw["electric-turret"]["laser-turret"].call_for_help_radius = 120
 data.raw["electric-turret"]["laser-turret"]["attack_parameters"].range = 72
-
 
 data.raw["mining-drill"]["electric-mining-drill"].mining_speed = 1.5
 data.raw["mining-drill"]["electric-mining-drill"].energy_usage = "270kW"
@@ -256,3 +269,5 @@ data.raw["unit"]["small-spitter"].pollution_to_join_attack = 200
 data.raw["unit"]["medium-spitter"].pollution_to_join_attack = 400
 data.raw["unit"]["big-spitter"].pollution_to_join_attack = 600
 data.raw["unit"]["behemoth-spitter"].pollution_to_join_attack = 800
+
+-- data.raw["wall"]["stone-wall"].max_health = 35000

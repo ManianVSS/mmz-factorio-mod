@@ -35,53 +35,13 @@ end
 
 function soft_mod_setup(player)
     if ((global["_map_initialized"] == nil) or
-        (global["_map_initialized"] == false)) then -- player.name == "MasterManiaZ") then				
+        (global["_map_initialized"] == false)) then
         global["_map_initialized"] = true
         global["_spawn_position"] = player.position
         global["_map_surface"] = player.surface
         global["_aegis_on"] = false
-        player.force.research_queue_enabled = true
 
-        player.force.set_ammo_damage_modifier("bullet", 1)
-        player.force.set_gun_speed_modifier("bullet", 1)
-        -- player.force.set_turret_attack_modifier("gun-turret", 10)
-
-        player.force.character_inventory_slots_bonus = player.force
-                                                           .character_inventory_slots_bonus +
-                                                           150
-        player.force.character_running_speed_modifier = 1.5
-        -- player.force.manual_mining_speed_modifier = 100
-        player.force.character_build_distance_bonus = 5000
-        player.force.character_item_drop_distance_bonus = 5000
-        player.force.character_reach_distance_bonus = 5000
-        player.force.character_resource_reach_distance_bonus = 5000
-        -- player.force.character_item_pickup_distance_bonus = 5000
-        -- player.force.character_loot_pickup_distance_bonus = 5000
-        player.force.character_health_bonus = 400
-        -- player.force.manual_crafting_speed_modifier = 100
-        player.force.manual_mining_speed_modifier = player.force
-                                                        .manual_mining_speed_modifier +
-                                                        10000
-        player.force.manual_crafting_speed_modifier = player.force
-                                                          .manual_crafting_speed_modifier +
-                                                          10000
-        player.force.inserter_stack_size_bonus = 10
-        player.force.stack_inserter_capacity_bonus = 20
-        player.force.laboratory_speed_modifier = 1
-        -- player.force.laboratory_productivity_bonus  = 10
-        -- player.force.mining_drill_productivity_bonus = 10
-        player.force.train_braking_force_bonus = 10
-
-        player.force.worker_robots_speed_modifier = 2
-        player.force.worker_robots_battery_modifier = 2
-        player.force.worker_robots_storage_bonus = 40
-
-        for i = 1, #game.forces do
-            game.forces[i].evolution_factor_by_pollution = 0
-            game.forces[i].evolution_factor_by_time = 0
-            game.forces[i].evolution_factor_by_killing_spawners = 1
-            game.forces[i].friendly_fire = false
-        end
+        for i = 1, #game.forces do game.forces[i].friendly_fire = false end
 
         printBaseLayout(player)
     end
@@ -313,6 +273,7 @@ function createInitialChest(player, xpos, ypos)
     })
     initial_chest.minable = false
     initial_chest.destructible = false
+    table.insert(global["initial_chests"], initial_chest)
     return initial_chest
 end
 
@@ -326,30 +287,18 @@ function printBaseLayout(player, tileToFillWith)
 
     -- Intial steel chests
     initial_chests = {}
-    global["initial_chests"] = initial_chests
+    global["initial_chests"] = initial_chests    
     count = 1
     for i = 0, 4 do
         for j = 0, 4 do
-            table.insert(initial_chests, createInitialChest(player,
-                                                            player.position.x -
-                                                                i - 3,
-                                                            player.position.y -
-                                                                j - 3))
-            table.insert(initial_chests, createInitialChest(player,
-                                                            player.position.x -
-                                                                i - 3,
-                                                            player.position.y +
-                                                                j + 2))
-            table.insert(initial_chests, createInitialChest(player,
-                                                            player.position.x +
-                                                                i + 2,
-                                                            player.position.y -
-                                                                j - 3))
-            table.insert(initial_chests, createInitialChest(player,
-                                                            player.position.x +
-                                                                i + 2,
-                                                            player.position.y +
-                                                                j + 2))
+            createInitialChest(player, player.position.x - i - 3,
+                               player.position.y - j - 3)
+            createInitialChest(player, player.position.x - i - 3,
+                               player.position.y + j + 2)
+            createInitialChest(player, player.position.x + i + 2,
+                               player.position.y - j - 3)
+            createInitialChest(player, player.position.x + i + 2,
+                               player.position.y + j + 2)
         end
     end
 
@@ -886,14 +835,12 @@ depositable_items_list = {
     "steel-plate", "automation-science-pack", "logistic-science-pack",
     "military-science-pack", "chemical-science-pack", "production-science-pack",
     "utility-science-pack", "space-science-pack", "iron-gear-wheel",
-    "electronic-circuit", "copper-cable", "iron-stick",
-    --  "pipe",
+    "electronic-circuit", "copper-cable", "iron-stick", --  "pipe",
     -- "pipe-to-ground", "transport-belt", "fast-transport-belt",
     -- "express-transport-belt", "splitter", "fast-splitter", "express-splitter",
     -- "underground-belt", "fast-underground-belt", "express-underground-belt",
     -- "inserter", "fast-inserter",
-     "stone-furnace", "engine-unit", "sulfur",
-    "advanced-circuit", 
+    "stone-furnace", "engine-unit", "sulfur", "advanced-circuit"
     -- "stone-wall", "grenade", "firearm-magazine"
     -- "piercing-rounds-magazine", "uranium-rounds-magazine", "artillery-shell"
 }
@@ -1132,42 +1079,18 @@ end
 function aegisCommand(event)
     local player = game.players[event.player_index]
     if (player.admin == true) then
-
-        local miningSpeedIncrease = 10000
         local craftingSpeedIncrease = 10000
-        -- local inserterCapacityIncrease = 10
-        -- local laboratoryBonus=10
-        -- local miningDrillBonus=100
-        -- local trainBrakingBonus=100
 
         if (global["_aegis_on"]) then
             global["_aegis_on"] = false
-            player.force.manual_mining_speed_modifier = player.force
-                                                            .manual_mining_speed_modifier -
-                                                            miningSpeedIncrease
             player.force.manual_crafting_speed_modifier = player.force
                                                               .manual_crafting_speed_modifier -
                                                               craftingSpeedIncrease
-            -- player.force.inserter_stack_size_bonus = player.force.inserter_stack_size_bonus - inserterCapacityIncrease
-            -- player.force.stack_inserter_capacity_bonus = player.force.stack_inserter_capacity_bonus - inserterCapacityIncrease
-            -- player.force.laboratory_speed_modifier = player.force.laboratory_speed_modifier - laboratoryBonus
-            -- player.force.laboratory_productivity_bonus = player.force.laboratory_productivity_bonus - laboratoryBonus
-            -- player.force.mining_drill_productivity_bonus = player.force.mining_drill_productivity_bonus - miningDrillBonus
-            -- player.force.train_braking_force_bonus = player.force.train_braking_force_bonus - trainBrakingBonus
         else
             global["_aegis_on"] = true
-            player.force.manual_mining_speed_modifier = player.force
-                                                            .manual_mining_speed_modifier +
-                                                            miningSpeedIncrease
             player.force.manual_crafting_speed_modifier = player.force
                                                               .manual_crafting_speed_modifier +
                                                               craftingSpeedIncrease
-            -- player.force.inserter_stack_size_bonus = player.force.inserter_stack_size_bonus + inserterCapacityIncrease
-            -- player.force.stack_inserter_capacity_bonus = player.force.stack_inserter_capacity_bonus + inserterCapacityIncrease
-            -- player.force.laboratory_speed_modifier = player.force.laboratory_speed_modifier + laboratoryBonus
-            -- player.force.laboratory_productivity_bonus = player.force.laboratory_productivity_bonus + laboratoryBonus
-            -- player.force.mining_drill_productivity_bonus = player.force.mining_drill_productivity_bonus + miningDrillBonus
-            -- player.force.train_braking_force_bonus = player.force.train_braking_force_bonus + trainBrakingBonus
         end
     else
         player.print(
@@ -1349,21 +1272,28 @@ function add_Commands()
                          "[Admin Command]: Generates resources in an area.",
                          generateResourcesCommand)
     commands.remove_command("blackDeath")
-    commands.add_command("blackDeath", "[Admin Command]: Kills all enemy entity on explored area.", blackDeathCommand)
+    commands.add_command("blackDeath",
+                         "[Admin Command]: Kills all enemy entity on explored area.",
+                         blackDeathCommand)
     commands.remove_command("marcoPolo")
     commands.add_command("marcoPolo", "[Admin Command]: Explores a large area.",
                          marcoPoloCommand)
     commands.remove_command("aegis")
-    commands.add_command("aegis", "[Admin Command]: Speeds up everything.",
+    commands.add_command("aegis",
+                         "[Admin Command]: Speeds up manual crafting speed (toggles).",
                          aegisCommand)
     commands.remove_command("enableAllTech")
-    commands.add_command("enableAllTech", "[Admin Command]: Unlocks all technologies.", enableAllTechCommand)
+    commands.add_command("enableAllTech",
+                         "[Admin Command]: Unlocks all technologies.",
+                         enableAllTechCommand)
     commands.remove_command("changeDiplomacy")
     commands.add_command("changeDiplomacy",
                          "[Admin Command]: Toggles diplomatic stance with enemy.",
                          changeDiplomacyCommand)
     commands.remove_command("enableAllRecipes")
-    commands.add_command("enableAllRecipes", "[Admin Command]: Emables all recipes.", enableAllRecipesCommand)
+    commands.add_command("enableAllRecipes",
+                         "[Admin Command]: Emables all recipes.",
+                         enableAllRecipesCommand)
     -- 
     -- commands.remove_command("mmzPrint")
     -- commands.add_command("mmzPrint",
