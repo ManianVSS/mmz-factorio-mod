@@ -24,13 +24,15 @@ data.raw["construction-robot"]["construction-robot"].speed = 0.18
 data.raw["construction-robot"]["construction-robot"].max_payload_size = 3
 data.raw["construction-robot"]["construction-robot"].energy_per_move = "15kJ"
 data.raw["construction-robot"]["construction-robot"].max_energy = "4.5MJ"
-data.raw["construction-robot"]["construction-robot"].speed_multiplier_when_out_of_energy = 0.33
+data.raw["construction-robot"]["construction-robot"]
+    .speed_multiplier_when_out_of_energy = 0.33
 
 data.raw["logistic-robot"]["logistic-robot"].speed = 0.15
 data.raw["logistic-robot"]["logistic-robot"].max_payload_size = 3
 data.raw["logistic-robot"]["logistic-robot"].energy_per_move = "15kJ"
 data.raw["logistic-robot"]["logistic-robot"].max_energy = "4.5MJ"
-data.raw["logistic-robot"]["logistic-robot"].speed_multiplier_when_out_of_energy = 0.33
+data.raw["logistic-robot"]["logistic-robot"].speed_multiplier_when_out_of_energy =
+    0.33
 
 data.raw["ammo-turret"]["gun-turret"].rotation_speed = 0.045
 data.raw["ammo-turret"]["gun-turret"].preparing_speed = 0.24
@@ -136,16 +138,24 @@ data.raw["boiler"]["heat-exchanger"].energy_consumption = "30MW"
 
 -- data.raw["electric-pole"]["small-electric-pole"].maximum_wire_distance = 7.5
 data.raw["electric-pole"]["small-electric-pole"].supply_area_distance = 3.5
--- data.raw["electric-pole"]["small-electric-pole"].collision_box = {{0, 0}, {0, 0}}
+data.raw["electric-pole"]["small-electric-pole"].collision_box = {
+    {-0.01, -0.01}, {0.01, 0.01}
+}
 -- data.raw["electric-pole"]["medium-electric-pole"].maximum_wire_distance = 9
 data.raw["electric-pole"]["medium-electric-pole"].supply_area_distance = 5
--- data.raw["electric-pole"]["medium-electric-pole"].collision_box = {{0, 0}, {0, 0}}
+data.raw["electric-pole"]["medium-electric-pole"].collision_box = {
+    {-0.01, -0.01}, {0.01, 0.01}
+}
 -- data.raw["electric-pole"]["big-electric-pole"].maximum_wire_distance = 30
 data.raw["electric-pole"]["big-electric-pole"].supply_area_distance = 3.5
--- data.raw["electric-pole"]["big-electric-pole"].collision_box = {{0, 0}, {0, 0}}
+data.raw["electric-pole"]["big-electric-pole"].collision_box = {
+    {-0.01, -0.01}, {0.01, 0.01}
+}
 -- data.raw["electric-pole"]["substation"].maximum_wire_distance = 18
 -- data.raw["electric-pole"]["substation"].supply_area_distance = 9
--- data.raw["electric-pole"]["substation"].collision_box = {{0, 0}, {0, 0}}
+data.raw["electric-pole"]["substation"].collision_box = {
+    {-0.01, -0.01}, {0.01, 0.01}
+}
 
 data.raw["recipe"]["loader"].hidden = false
 data.raw["recipe"]["loader"].enabled = true
@@ -260,6 +270,64 @@ data.raw["logistic-container"]["logistic-chest-requester"].inventory_size = 144
 -- data.raw["rail-chain-signal"]["rail-chain-signal"].collision_box = {
 --     {0, 0}, {0, 0}
 -- }
+
+data.raw["solar-panel"]["solar-panel"].collision_box = {{-1, -1}, {1, 1}}
+data.raw["solar-panel"]["solar-panel"].selection_box = {{-1, -1}, {1, 1}}
+data.raw["accumulator"]["accumulator"].collision_box = {
+    {-0.4, -0.4}, {0.4, 0.4}
+}
+data.raw["accumulator"]["accumulator"].selection_box = {
+    {-0.5, -0.5}, {0.5, 0.5}
+}
+data.raw["accumulator"]["accumulator"].drawing_box = {{-0.5, -0.5}, {0.5, 0.5}}
+
+data.raw["radar"]["radar"].collision_box = {{-0.01, -0.01}, {0.01, 0.01}}
+data.raw["radar"]["radar"].energy_per_sector = "1MJ"
+data.raw["radar"]["radar"].energy_usage = "900kW"
+data.raw["radar"]["radar"].max_distance_of_sector_revealed = 42
+data.raw["radar"]["radar"].max_distance_of_nearby_sector_revealed = 9
+data.raw["radar"]["radar"].energy_per_nearby_scan = "25kJ"
+data.raw["radar"]["radar"].rotation_speed = 0.03
+
+eshape = {width = 1, height = 1, type = "full"}
+data.raw["energy-shield-equipment"]["energy-shield-equipment"].shape = eshape
+data.raw["energy-shield-equipment"]["energy-shield-equipment"]["energy_source"]
+    .buffer_capacity = "360kJ"
+data.raw["energy-shield-equipment"]["energy-shield-equipment"]["energy_source"]
+    .input_flow_limit = "720kW"
+data.raw["energy-shield-equipment"]["energy-shield-mk2-equipment"].shape =
+    eshape
+data.raw["energy-shield-equipment"]["energy-shield-mk2-equipment"]["energy_source"]
+    .buffer_capacity = "540kJ"
+data.raw["energy-shield-equipment"]["energy-shield-mk2-equipment"]["energy_source"]
+    .input_flow_limit = "1080kW"
+data.raw["battery-equipment"]["battery-equipment"].shape = eshape
+data.raw["battery-equipment"]["battery-equipment"]["energy_source"]
+    .buffer_capacity = "60MJ"
+data.raw["battery-equipment"]["battery-mk2-equipment"].shape = eshape
+data.raw["battery-equipment"]["battery-mk2-equipment"]["energy_source"]
+    .buffer_capacity = "300MJ"
+
+data.raw["solar-panel-equipment"]["solar-panel-equipment"].power = "90kW"
+data.raw["generator-equipment"]["fusion-reactor-equipment"].shape = eshape
+data.raw["generator-equipment"]["fusion-reactor-equipment"].power = "2250kW"
+data.raw["active-defense-equipment"]["personal-laser-defense-equipment"].shape =
+    eshape
+data.raw["active-defense-equipment"]["personal-laser-defense-equipment"]["energy_source"]
+    .buffer_capacity = "660kJ"
+data.raw["active-defense-equipment"]["personal-laser-defense-equipment"]["attack_parameters"]
+    .range = 20
+
+data.raw["roboport-equipment"]["personal-roboport-equipment"].shape = eshape
+data.raw["roboport-equipment"]["personal-roboport-equipment"]["energy_source"]
+    .buffer_capacity = "105MJ"
+data.raw["roboport-equipment"]["personal-roboport-equipment"]["energy_source"]
+    .input_flow_limit = "10500KW"
+data.raw["roboport-equipment"]["personal-roboport-mk2-equipment"].shape = eshape
+data.raw["roboport-equipment"]["personal-roboport-mk2-equipment"]["energy_source"]
+    .buffer_capacity = "105MJ"
+data.raw["roboport-equipment"]["personal-roboport-mk2-equipment"]["energy_source"]
+    .input_flow_limit = "10500KW"
 
 data.raw["unit"]["small-biter"].pollution_to_join_attack = 200
 data.raw["unit"]["medium-biter"].pollution_to_join_attack = 400
