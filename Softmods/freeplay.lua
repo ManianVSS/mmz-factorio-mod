@@ -4,18 +4,12 @@ local crash_site = require("crash-site")
 local created_items = function()
   return
   {
-    ["iron-plate"] = 300,
-    -- ["copper-plate"] = 200,
-    -- ["steel-plate"] = 100,
-    ["wood"] = 100,
-    ["submachine-gun"] = 1,
+    ["iron-plate"] = 8,
+    ["wood"] = 1,
+    ["pistol"] = 1,
     ["firearm-magazine"] = 10,
-    -- ["burner-mining-drill"] = 1,
-    ["electric-mining-drill"] = 30,
-    ["small-electric-pole"] = 30,
-    ["stone-furnace"] = 1,
-    ["solar-panel"]= 100,
-    -- ["accumulator"]= 84
+    ["burner-mining-drill"] = 1,
+    ["stone-furnace"] = 1
   }
 end
 
@@ -314,129 +308,23 @@ function deepcopy(orig)
     return copy
 end
 
+function createInitialEntity(player, entity_name, x, y)
+    initial_entity = player.surface.create_entity({
+        name = entity_name,
+        force = player.force,
+        amount = 1,
+        position = {x, y}
+    })
+    initial_entity.minable = false
+    initial_entity.destructible = false
+    return initial_entity
+end
+
 function mmzPrint(player, tileToFillWith)
 
-    player.teleport {player.position.x - 31, player.position.y - 31}
-    waterFillArea(player, 30, 30, 31, 31)
-    landFillArea(player, 30, 30, 31, 31, "grass-1")
-    player.teleport {player.position.x + 31, player.position.y + 31}
-
-    for i = 1, 17 do
-        initial_turret = player.surface.create_entity({
-            name = "laser-turret",
-            force = player.force,
-            amount = 1,
-            position = {player.position.x + 20, player.position.y - 18 + i * 2}
-        })
-        initial_turret.minable = false
-        initial_turret.destructible = false
-
-        initial_turret = player.surface.create_entity({
-            name = "laser-turret",
-            force = player.force,
-            amount = 1,
-            position = {player.position.x - 20, player.position.y - 18 + i * 2}
-        })
-        initial_turret.minable = false
-        initial_turret.destructible = false
-
-        initial_turret = player.surface.create_entity({
-            name = "laser-turret",
-            force = player.force,
-            amount = 1,
-            position = {player.position.x - 18 + i * 2, player.position.y + 20}
-        })
-        initial_turret.minable = false
-        initial_turret.destructible = false
-
-        initial_turret = player.surface.create_entity({
-            name = "laser-turret",
-            force = player.force,
-            amount = 1,
-            position = {player.position.x - 18 + i * 2, player.position.y - 20}
-        })
-        initial_turret.minable = false
-        initial_turret.destructible = false
-    end
-
-    for i = 1, 11 do
-        init_spanel = player.surface.create_entity({
-            name = "solar-panel",
-            force = player.force,
-            amount = 1,
-            position = {player.position.x + 22, player.position.y - 19 + i * 3}
-        })
-        init_spanel.minable = false
-        init_spanel.destructible = false
-
-        initial_lamp = player.surface.create_entity({
-            name = "small-lamp",
-            force = player.force,
-            amount = 1,
-            position = {player.position.x + 25, player.position.y - 19 + i * 3}
-        })
-        initial_lamp.minable = false
-        initial_lamp.destructible = false
-
-        init_spanel = player.surface.create_entity({
-            name = "solar-panel",
-            force = player.force,
-            amount = 1,
-            position = {player.position.x - 23, player.position.y - 19 + i * 3}
-        })
-        init_spanel.minable = false
-        init_spanel.destructible = false
-
-        initial_lamp = player.surface.create_entity({
-            name = "small-lamp",
-            force = player.force,
-            amount = 1,
-            position = {player.position.x - 26, player.position.y - 19 + i * 3}
-        })
-        initial_lamp.minable = false
-        initial_lamp.destructible = false
-
-        init_spanel = player.surface.create_entity({
-            name = "solar-panel",
-            force = player.force,
-            amount = 1,
-            position = {player.position.x - 19 + i * 3, player.position.y - 23}
-        })
-        init_spanel.minable = false
-        init_spanel.destructible = false
-
-        initial_lamp = player.surface.create_entity({
-            name = "small-lamp",
-            force = player.force,
-            amount = 1,
-            position = {player.position.x - 19 + i * 3, player.position.y - 26}
-        })
-        initial_lamp.minable = false
-        initial_lamp.destructible = false
-
-        init_spanel = player.surface.create_entity({
-            name = "solar-panel",
-            force = player.force,
-            amount = 1,
-            position = {player.position.x - 19 + i * 3, player.position.y + 22}
-        })
-        init_spanel.minable = false
-        init_spanel.destructible = false
-
-        initial_lamp = player.surface.create_entity({
-            name = "small-lamp",
-            force = player.force,
-            amount = 1,
-            position = {player.position.x - 19 + i * 3, player.position.y + 25}
-        })
-        initial_lamp.minable = false
-        initial_lamp.destructible = false
-    end
-
+    -- Write MMZ in tiles
     local tiles = {}
     local pos = player.position
-
-    pos.y = pos.y - 4
 
     if (tileToFillWith == nil) then
         tileToFillWith = "dirt-1"
@@ -521,147 +409,6 @@ function mmzPrint(player, tileToFillWith)
     end
 
     player.surface.set_tiles(tiles)
-
-    -- initial_epole = player.surface.create_entity({
-    --     name = "substation",
-    --     force = player.force,
-    --     amount = 1,
-    --     position = {player.position.x, player.position.y }
-    -- })
-    -- initial_epole.minable = false
-    -- initial_epole.destructible = false
-
-    initial_epole = player.surface.create_entity({
-        name = "substation",
-        force = player.force,
-        amount = 1,
-        position = {player.position.x, player.position.y - 18}
-    })
-    initial_epole.minable = false
-    initial_epole.destructible = false
-
-    initial_epole = player.surface.create_entity({
-        name = "substation",
-        force = player.force,
-        amount = 1,
-        position = {player.position.x, player.position.y + 18}
-    })
-    initial_epole.minable = false
-    initial_epole.destructible = false
-
-    initial_epole = player.surface.create_entity({
-        name = "substation",
-        force = player.force,
-        amount = 1,
-        position = {player.position.x + 18, player.position.y}
-    })
-    initial_epole.minable = false
-    initial_epole.destructible = false
-
-    initial_epole = player.surface.create_entity({
-        name = "substation",
-        force = player.force,
-        amount = 1,
-        position = {player.position.x + 18, player.position.y - 18}
-    })
-    initial_epole.minable = false
-    initial_epole.destructible = false
-
-    initial_epole = player.surface.create_entity({
-        name = "substation",
-        force = player.force,
-        amount = 1,
-        position = {player.position.x + 18, player.position.y + 18}
-    })
-    initial_epole.minable = false
-    initial_epole.destructible = false
-
-    initial_epole = player.surface.create_entity({
-        name = "substation",
-        force = player.force,
-        amount = 1,
-        position = {player.position.x - 18, player.position.y}
-    })
-    initial_epole.minable = false
-    initial_epole.destructible = false
-
-    initial_epole = player.surface.create_entity({
-        name = "substation",
-        force = player.force,
-        amount = 1,
-        position = {player.position.x - 18, player.position.y - 18}
-    })
-    initial_epole.minable = false
-    initial_epole.destructible = false
-
-    initial_epole = player.surface.create_entity({
-        name = "substation",
-        force = player.force,
-        amount = 1,
-        position = {player.position.x - 18, player.position.y + 18}
-    })
-    initial_epole.minable = false
-    initial_epole.destructible = false
-
-    for i = 0, 8 do
-        initial_accumulator = player.surface.create_entity({
-            name = "accumulator",
-            force = player.force,
-            amount = 1,
-            position = {player.position.x - 8 + i * 2, player.position.y + 10}
-        })
-        initial_accumulator.minable = false
-        initial_accumulator.destructible = false
-        -- initial_accumulator.energy = 10000
-
-        initial_lamp = player.surface.create_entity({
-            name = "small-lamp",
-            force = player.force,
-            amount = 1,
-            position = {player.position.x - 9 + i * 2, player.position.y + 11}
-        })
-        initial_lamp.minable = false
-        initial_lamp.destructible = false
-
-        initial_accumulator = player.surface.create_entity({
-            name = "accumulator",
-            force = player.force,
-            amount = 1,
-            position = {player.position.x - 8 + i * 2, player.position.y + 13}
-        })
-        initial_accumulator.minable = false
-        initial_accumulator.destructible = false
-        -- initial_accumulator.energy = 10000
-
-        initial_accumulator = player.surface.create_entity({
-            name = "accumulator",
-            force = player.force,
-            amount = 1,
-            position = {player.position.x - 8 + i * 2, player.position.y - 10}
-        })
-        initial_accumulator.minable = false
-        initial_accumulator.destructible = false
-        -- initial_accumulator.energy = 10000
-
-        initial_lamp = player.surface.create_entity({
-            name = "small-lamp",
-            force = player.force,
-            amount = 1,
-            position = {player.position.x - 9 + i * 2, player.position.y - 12}
-        })
-        initial_lamp.minable = false
-        initial_lamp.destructible = false
-
-        initial_accumulator = player.surface.create_entity({
-            name = "accumulator",
-            force = player.force,
-            amount = 1,
-            position = {player.position.x - 8 + i * 2, player.position.y - 13}
-        })
-        initial_accumulator.minable = false
-        initial_accumulator.destructible = false
-        -- initial_accumulator.energy = 10000
-    end
 
     -- initial_playerPort = player.surface.create_entity({
     --     name = "player-port",
@@ -791,29 +538,76 @@ function printBaseLayout(player, tileToFillWith)
     -- waterFillArea(player, 14, 14, 15, 15)
     -- landFillArea(player, 14, 14, 15, 15, "dirt-7")
     -- player.teleport {player.position.x + 15, player.position.y + 15}
-
+    base_size=40
     landFillArea(player, 8, 8, 0, 0, "dirt-7")
     tileRing(player, 65, 1, "water", 10)
-    generateResources(player, 500, 100, 31)
+    generateResources(player, 500, 33, base_size)
 
+    player.teleport {player.position.x - base_size -30, player.position.y - base_size -30}
+    waterFillArea(player, 30, 30, base_size+ 30, base_size+30)
+    landFillArea(player, 30, 30, base_size+30, base_size+30, "grass-1")
+    player.teleport {player.position.x + base_size+30, player.position.y + base_size+30}
+
+    -- Turrets
+    for i = 1, 16 do
+        createInitialEntity(player, "laser-turret", player.position.x + 20, player.position.y - 18 + i * 2 )
+        createInitialEntity(player, "laser-turret", player.position.x - 20, player.position.y - 18 + i * 2 )
+        createInitialEntity(player, "laser-turret", player.position.x - 18 + i * 2, player.position.y + 20 )
+        createInitialEntity(player, "laser-turret", player.position.x - 18 + i * 2, player.position.y - 20 )
+    end
+
+    -- Solar Panels
+    for i = 1, 33 do
+         for j = 0, 3 do
+            createInitialEntity(player, "solar-panel", player.position.x + 22 + j, player.position.y - 19 + i )
+            createInitialEntity(player, "solar-panel", player.position.x - 23 - j, player.position.y - 19 + i )
+            createInitialEntity(player, "solar-panel", player.position.x - 19 + i, player.position.y - 23 - j )
+            createInitialEntity(player, "solar-panel", player.position.x - 19 + i, player.position.y + 22 + j )
+        end
+    end
+
+    -- Accumulators
+    for i = 0, 24 do
+        for j = 0, 8 do
+            createInitialEntity(player, "accumulator", player.position.x - 12 + i, player.position.y + 10 + j )
+            createInitialEntity(player, "accumulator", player.position.x - 12 + i, player.position.y - 10 - j )
+            -- initial_accumulator.energy = 10000
+        end
+    end
+    
+    -- Lights
+    for i = 1, 11 do
+        createInitialEntity(player, "small-lamp", player.position.x + 30, player.position.y - 19 + i * 3 )
+        createInitialEntity(player, "small-lamp", player.position.x - 30, player.position.y - 19 + i * 3 )
+        createInitialEntity(player, "small-lamp", player.position.x - 19 + i * 3, player.position.y - 30 )
+        createInitialEntity(player, "small-lamp", player.position.x - 19 + i * 3, player.position.y + 30 )
+    end
+
+    -- Substations
+    for i = -2, 2 do
+        for j = -2, 2 do
+            -- If i and j not equal 0         
+            if not (i == 0 and j == 0) then
+                createInitialEntity(player, "substation", player.position.x + 18*i, player.position.y + 18*j )
+            end
+        end
+    end   
+    
     -- Intial steel chests
     initial_chests = {}
     storage["initial_chests"] = initial_chests    
     count = 1
-    for i = 0, 4 do
-        for j = 0, 4 do
-            createInitialChest(player, player.position.x - i - 3,
-                               player.position.y - j - 3)
-            createInitialChest(player, player.position.x - i - 3,
-                               player.position.y + j + 2)
-            createInitialChest(player, player.position.x + i + 2,
-                               player.position.y - j - 3)
-            createInitialChest(player, player.position.x + i + 2,
-                               player.position.y + j + 2)
+    for i = 0, 23 do
+        for j = 0, 1 do
+            createInitialChest(player, player.position.x - 12 + i, player.position.y + 7 + j)
+            createInitialChest(player, player.position.x - 12 + i, player.position.y - 7 - j)
+            
+            -- createInitialChest(player, player.position.x - i - 6, player.position.y - j - 6)
+            -- createInitialChest(player, player.position.x - i - 6, player.position.y + j + 5)
+            -- createInitialChest(player, player.position.x + i + 5, player.position.y - j - 6)
+            -- createInitialChest(player, player.position.x + i + 5, player.position.y + j + 5)
         end
     end
-
-    mmzPrint(player, "dirt-7")
 
     -- Spawn spin belt
     cur_dir_index = 1
@@ -839,6 +633,8 @@ function printBaseLayout(player, tileToFillWith)
             end
         end
     end
+
+     mmzPrint(player, "dirt-7")
 end
 
 function tileRing(player, size, thichness, tileToFillWith, gap)
@@ -1003,8 +799,7 @@ function reviveCommand(command)
             ghostName = "rail"
         end
 
-        container_with_entity = find_container_with_entity(ghostName,
-                                                           inventories)
+        container_with_entity = find_container_with_entity(ghostName, inventories)
         if container_with_entity ~= nil then
             placed_entity_status = furnaceEntities[i].silent_revive()
             if placed_entity_status then
