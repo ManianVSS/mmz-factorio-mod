@@ -481,6 +481,15 @@ function init_soft_mod(player)
 
     player.force.recipes["steel-plate"].enabled=true
 	player.force.recipes["solar-panel"].enabled=true
+    
+    
+    -- player.force.recipes["loader"].hidden=false
+    player.force.recipes["loader"].enabled=true
+    -- player.force.recipes["fast-loader"].hidden=false
+    player.force.recipes["loader"].enabled=true
+    -- player.force.recipes["express-loader"].hidden=false
+    player.force.recipes["express-loader"].enabled=true
+
 
 	-- player.insert{name="submachine-gun", count=1}  
 	-- player.insert{name="firearm-magazine", count=200} 
@@ -1578,6 +1587,120 @@ function enableAllRecipesCommand(event)
     end
 end
 
+function craftItem(player, item_name, quantity)
+    -- Craft a specified item. Read the recipe from game data.
+    local item_recipe = player.force.recipes[item_name]
+    if item_recipe == nil then
+        player.print("Recipe for " .. item_name .. " not found.")
+        return false
+    end
+    local ingredients = item_recipe.ingredients
+    -- Check if player has all ingredients
+    for _, ingredient in pairs(ingredients) do
+
+        -- Ignore fluid ingredients for now
+        if ingredient.type == "fluid" then
+            player.print("Cannot craft " .. item_name .. " because it requires fluid " ..
+                             ingredient.name .. ".")
+            return false
+        end
+
+        local ing_name = ingredient.name
+        local ing_count = ingredient.amount * quantity
+
+        -- Check if player has enough of the ingredient or if player is admin
+        if player.get_item_count(ing_name) < ing_count then
+            --Try crafting the required item if recipe exists
+            if player.force.recipes[ing_name] ~= nil then
+                local crafted = craftItem(player, ing_name,
+                                         math.ceil(ing_count /
+                                                   player.force.recipes[ing_name]
+                                                       .products[1].amount))
+                
+                if not crafted then
+                     player.print("Could not craft sufficient " .. ing_name .. " to craft " ..
+                             item_name .. "(s).")
+                    return false                
+                end
+            else
+                player.print("Not enough " .. ing_name .. " to craft " ..
+                             quantity .. " " .. item_name .. "(s).")
+                return false
+            end
+        end
+    end
+    -- Remove ingredients from player inventory
+    for _, ingredient in pairs(ingredients) do
+        local ing_name = ingredient.name
+        local ing_count = ingredient.amount * quantity
+        player.remove_item({name = ing_name, count = ing_count})
+    end
+    -- Add crafted items to player inventory
+    local prod_count = item_recipe.products[1].amount * quantity
+    player.insert({name = item_name, count = prod_count})
+    return true
+end
+
+function craftRecipe(player, recipe_name, quantity)
+    -- Check if the recipe exists
+    if not player.force.recipes[recipe_name] then
+        player.print("Recipe " .. recipe_name .. " does not exist.")
+        return
+    end
+    
+    crafted=player.begin_crafting{count = quantity, recipe = recipe_name}
+
+    if crafted == 0 then
+        -- Try crafting the recipe manually
+        local success = craftItem(player, recipe_name, quantity)
+        if not success then
+            player.print("Not enough ingredients to craft " .. quantity .. " of " .. recipe_name .. ".")
+            -- Print the ingredients needed
+            local item_recipe = player.force.recipes[recipe_name]
+            local ingredients = item_recipe.ingredients
+            player.print("Ingredients needed:")
+            for _, ingredient in pairs(ingredients) do
+                local ing_name = ingredient.name
+                local ing_count = ingredient.amount * quantity
+                player.print("- " .. ing_count .. " of " .. ing_name)
+            end
+            return
+        else
+            player.print(quantity .. " of " .. recipe_name .. " has been crafted directly.")
+        end
+    else
+        player.print(quantity .. " of " .. recipe_name .. " is set to be crafted.")
+    end
+end
+
+function craftRecipeCommand(event)
+    local player = game.players[event.player_index]
+    if (event.parameter == nil) then
+        player.print("Recipe name and quantity not passed.")
+        return
+    end
+
+    local params = {}
+    for word in string.gmatch(event.parameter, "%S+") do
+        table.insert(params, word)
+    end
+
+    if #params < 2 then
+        player.print("Please provide both recipe name and quantity.")
+        return
+    end
+
+    local recipe_name = params[1]
+    local quantity = tonumber(params[2])
+
+    if quantity == nil then
+        player.print("Quantity must be a number.")
+        return
+    end
+
+    craftRecipe(player, recipe_name, quantity)
+end
+
 function add_Commands()
 
     commands.remove_command("teleport")
@@ -1678,11 +1801,9 @@ function add_Commands()
 
     commands.remove_command("mmzPrint")
     commands.add_command("mmzPrint", "[Admin Command]: Creates a safe zone with MMZ print.", mmzPrintCommand)
-    -- 
-    -- commands.remove_command("mmzPrint")
-    -- commands.add_command("mmzPrint",
-    --                      "[Admin Command]: Prints the MMZ spawn base.",
-    --                      mmzPrintCommand)
+    
+    commands.remove_command("craftRecipe")
+    commands.add_command("craftRecipe", "[Command]: Crafts specified quantity of a recipe if enough ingredients are available.", craftRecipeCommand)
 end
 
 freeplay.on_load = function() add_Commands() end
