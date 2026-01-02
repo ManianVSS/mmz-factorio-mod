@@ -429,40 +429,7 @@ function mmzPrintCommand(event)
     end
 end
 
-function reviveCommand(command)
-  local player = game.players[command.player_index]
 
-  local constructRadius = 200
-
-  if (command.parameter ~= nil) then
-      constructRadius = command.parameter
-  end
-
-  ghostEntities = player.surface.find_entities_filtered {
-      type = "entity-ghost",
-      position = player.position,
-      radius = constructRadius
-  }
-  playerInventory = player.get_main_inventory()
-  inventoryContents = playerInventory.get_contents()
-
-  for i = 1, #ghostEntities do
-      local ghostName = ghostEntities[i].ghost_name
-
-      if ((ghostName == "straight-rail") or (ghostName == "curved-rail")) then
-          ghostName = "rail"
-      end
-
-     if ((inventoryContents[ghostName] ~= nil) and (inventoryContents[ghostName] > 0)) then
-          ghostEntities[i].silent_revive()
-          inventoryContents[ghostName] = inventoryContents[ghostName] - 1;
-          playerInventory.remove {
-              name = ghostName,
-              count = 1
-          }          
-      end
-  end
-end
 
 function init_soft_mod(player)
 
@@ -787,6 +754,7 @@ function deconstruct(player, radius)
     end
 end
 
+
 function reviveCommand(command)
     local player = game.players[command.player_index]
     local constructRadius = 200
@@ -794,25 +762,40 @@ function reviveCommand(command)
     -- if (command.parameter ~= nil) then constructRadius = command.parameter end
     deconstruct(player, constructRadius)
 
-    furnaceEntities = player.surface.find_entities_filtered {
+    ghost_entities = player.surface.find_entities_filtered {
         type = "entity-ghost",
         position = player.position,
         radius = constructRadius
     }
     inventories = get_accessible_containers(player, constructRadius)
 
-    for i = 1, #furnaceEntities do
-        local ghostName = furnaceEntities[i].ghost_name
+    for i = 1, #ghost_entities do
+        local ghostName = ghost_entities[i].ghost_name
 
-        if ((ghostName == "straight-rail") or (ghostName == "curved-rail")) then
+        --If ghost name has -rail as a substring, set ghost name to rail
+        start_index, end_index = string.find(ghostName, "-rail")
+        if start_index ~= nil and end_index ~= nil then
             ghostName = "rail"
         end
 
         container_with_entity = find_container_with_entity(ghostName, inventories)
         if container_with_entity ~= nil then
-            placed_entity_status = furnaceEntities[i].silent_revive()
+            placed_entity_status = ghost_entities[i].silent_revive()
             if placed_entity_status then
                 container_with_entity.remove_item({name = ghostName})
+            end
+        else
+            -- Try to craft the entity if not found in any container
+            player.print("Not enough " .. ghostName ..
+                " to revive entity ghost.. Will attempt to craft one.")
+            if craftItem(player, ghostName, 1) then
+                placed_entity_status = ghost_entities[i].silent_revive()
+                if placed_entity_status then
+                    player.get_main_inventory().remove {name = ghostName, count = 1}
+                end
+            else
+                player.print("Failed to craft " .. ghostName ..
+                    ". Cannot revive entity ghost.")
             end
         end
     end
@@ -1645,7 +1628,7 @@ function craftRecipe(player, recipe_name, quantity)
     -- Check if the recipe exists
     if not player.force.recipes[recipe_name] then
         player.print("Recipe " .. recipe_name .. " does not exist.")
-        return
+        return false
     end
     
     crafted=player.begin_crafting{count = quantity, recipe = recipe_name}
@@ -1664,12 +1647,14 @@ function craftRecipe(player, recipe_name, quantity)
                 local ing_count = ingredient.amount * quantity
                 player.print("- " .. ing_count .. " of " .. ing_name)
             end
-            return
+            return false
         else
             player.print(quantity .. " of " .. recipe_name .. " has been crafted directly.")
+            return true
         end
     else
         player.print(quantity .. " of " .. recipe_name .. " is set to be crafted.")
+        return true
     end
 end
 
