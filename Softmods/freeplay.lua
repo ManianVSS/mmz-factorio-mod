@@ -440,8 +440,8 @@ function init_soft_mod(player)
 	player.force.friendly_fire=false	
 	player.force.character_inventory_slots_bonus=player.force.character_inventory_slots_bonus+5000
 	player.force.character_running_speed_modifier = 3
-	player.force.manual_crafting_speed_modifier=200
-	player.force.manual_mining_speed_modifier=100
+	-- player.force.manual_crafting_speed_modifier=200
+	-- player.force.manual_mining_speed_modifier=100
 	player.force.character_build_distance_bonus = 5000
 	player.force.character_reach_distance_bonus = 5000	
 	player.force.character_resource_reach_distance_bonus = 5000
@@ -465,7 +465,7 @@ function init_soft_mod(player)
 
     player.print("Soft mod initialized")
 
-  printBaseLayout(player)
+    printBaseLayout(player)
 end
 
 -- Need to optimize the function instead of too much copy paste
@@ -517,7 +517,7 @@ function printBaseLayout(player, tileToFillWith)
     base_size=40
     landFillArea(player, 8, 8, 0, 0, "dirt-7")
     tileRing(player, 65, 1, "water", 10)
-    generateResources(player, 500, 33, base_size)
+    generateResources(player, 500, 16, base_size)
 
     player.teleport {player.position.x - base_size -30, player.position.y - base_size -30}
     waterFillArea(player, 30, 30, base_size+ 30, base_size+30)
@@ -534,7 +534,7 @@ function printBaseLayout(player, tileToFillWith)
 
     -- Solar Panels
     for i = 1, 33 do
-         for j = 0, 3 do
+         for j = 0, 5 do
             createInitialEntity(player, "solar-panel", player.position.x + 22 + j, player.position.y - 19 + i )
             createInitialEntity(player, "solar-panel", player.position.x - 23 - j, player.position.y - 19 + i )
             createInitialEntity(player, "solar-panel", player.position.x - 19 + i, player.position.y - 23 - j )
@@ -553,10 +553,10 @@ function printBaseLayout(player, tileToFillWith)
     
     -- Lights
     for i = 1, 11 do
-        createInitialEntity(player, "small-lamp", player.position.x + 30, player.position.y - 19 + i * 3 )
-        createInitialEntity(player, "small-lamp", player.position.x - 30, player.position.y - 19 + i * 3 )
-        createInitialEntity(player, "small-lamp", player.position.x - 19 + i * 3, player.position.y - 30 )
-        createInitialEntity(player, "small-lamp", player.position.x - 19 + i * 3, player.position.y + 30 )
+        createInitialEntity(player, "small-lamp", player.position.x + 33, player.position.y - 19 + i * 3 )
+        createInitialEntity(player, "small-lamp", player.position.x - 33, player.position.y - 19 + i * 3 )
+        createInitialEntity(player, "small-lamp", player.position.x - 19 + i * 3, player.position.y - 33 )
+        createInitialEntity(player, "small-lamp", player.position.x - 19 + i * 3, player.position.y + 33 )
     end
 
     -- Substations
@@ -759,6 +759,12 @@ function reviveCommand(command)
     local player = game.players[command.player_index]
     local constructRadius = 200
 
+    -- Check if player is  in map mode. If so, return
+    if (player.controller_type == defines.controllers.map_editor) then
+        player.print("Cannot revive entity ghosts while in map editor mode.")
+        return
+    end
+
     -- if (command.parameter ~= nil) then constructRadius = command.parameter end
     deconstruct(player, constructRadius)
 
@@ -767,6 +773,25 @@ function reviveCommand(command)
         position = player.position,
         radius = constructRadius
     }
+
+    -- If player is not nil 
+    if (player == nil) then        
+        return
+    end
+
+    --if player.cheat_mode is set to true, revive all ghosts without checking for items
+    if (player.cheat_mode == true) then
+        for i = 1, #ghost_entities do
+            -- if ghost name starts with infinity-, then skip the item
+            if string.sub(ghost_entities[i].ghost_name, 1, 9) == "infinity-" then
+                player.print("Skipping revival of " .. ghost_entities[i].ghost_name .. " as it is an infinity chest ghost.")               
+            else
+                ghost_entities[i].revive()
+            end
+        end
+        return
+    end
+
     inventories = get_accessible_containers(player, constructRadius)
 
     for i = 1, #ghost_entities do
@@ -785,17 +810,21 @@ function reviveCommand(command)
                 container_with_entity.remove_item({name = ghostName})
             end
         else
-            -- Try to craft the entity if not found in any container
-            player.print("Not enough " .. ghostName ..
-                " to revive entity ghost.. Will attempt to craft one.")
-            if craftItem(player, ghostName, 1) then
-                placed_entity_status = ghost_entities[i].silent_revive()
-                if placed_entity_status then
-                    player.get_main_inventory().remove {name = ghostName, count = 1}
+            -- if ghost name starts with infinity-, then skip the item
+            if string.sub(ghost_entities[i].ghost_name, 1, 9) ~= "infinity-" then
+                              
+                -- Try to craft the entity if not found in any container
+                player.print("Not enough " .. ghostName ..
+                    " to revive entity ghost.. Will attempt to craft one.")
+                if craftItem(player, ghostName, 1) then
+                    placed_entity_status = ghost_entities[i].silent_revive()
+                    if placed_entity_status then                    
+                        player.remove_item({name = ghostName, count = 1})
+                    end
+                else
+                    player.print("Failed to craft " .. ghostName ..
+                        ". Cannot revive entity ghost.")
                 end
-            else
-                player.print("Failed to craft " .. ghostName ..
-                    ". Cannot revive entity ghost.")
             end
         end
     end
@@ -1315,7 +1344,7 @@ function generateResource(resource_name,player, density, pos1, pos2)
     tileFillArea('grass-1', player.surface, pos1, pos2)
 
     -- Delete resources in area before generating
-    delete_resources_in_area(player.surface, pos1, pos2)
+    -- delete_resources_in_area(player.surface, pos1, pos2)
 
    for y = pos1.y, pos2.y do
         for x = pos1.x, pos2.x do
@@ -1346,23 +1375,29 @@ function generateResources(player, density, size, patchOffset)
     local ore = nil    
     local oilPatchSide = size / 6
 
-    generateResource('coal', player, density * 2,
-    {x=center_x-patchOffset-size,   y=center_y-patchOffset-size},
-    {x=center_x-patchOffset,        y=center_y-patchOffset}
+    -- Delete resources in area of size  before generating
+    delete_resources_in_area(player.surface, 
+    {x=center_x-patchOffset-size-50,   y=center_y-patchOffset-size-50},
+    {x=center_x+patchOffset+size+50,   y=center_y+patchOffset+size+50}
     )
 
-    generateResource('iron-ore', player, density * 2,
+    generateResource('coal', player, density,
+    {x=center_x-patchOffset-size,   y=center_y-patchOffset-size},
+    {x=center_x+patchOffset-1,        y=center_y-patchOffset}
+    )
+
+    generateResource('iron-ore', player, density,
     {x=center_x+patchOffset,        y=center_y-patchOffset-size},
-    {x=center_x+patchOffset+size,   y=center_y-patchOffset}
+    {x=center_x+patchOffset+size,   y=center_y+patchOffset-1}
     )
 
     generateResource('copper-ore', player, density,
-    {x=center_x-patchOffset-size,   y=center_y+patchOffset},
+    {x=center_x-patchOffset-size,   y=center_y-patchOffset+1},
     {x=center_x-patchOffset,        y=center_y+patchOffset+size}
     )
 
     generateResource('stone', player, density,
-    {x=center_x+patchOffset,        y=center_y+patchOffset},
+    {x=center_x-patchOffset+1,        y=center_y+patchOffset},
     {x=center_x+patchOffset+size,   y=center_y+patchOffset+size}
     )
 
@@ -1423,17 +1458,24 @@ function aegisCommand(event)
     local player = game.players[event.player_index]
     if (player.admin == true) then
         local craftingSpeedIncrease = 10000
+        local miningSpeedIncrease = 10000
 
         if (storage["_aegis_on"]) then
             storage["_aegis_on"] = false
             player.force.manual_crafting_speed_modifier = player.force
                                                               .manual_crafting_speed_modifier -
                                                               craftingSpeedIncrease
+            player.force.manual_mining_speed_modifier= player.force
+                                                            .manual_mining_speed_modifier -
+                                                            miningSpeedIncrease
         else
             storage["_aegis_on"] = true
             player.force.manual_crafting_speed_modifier = player.force
                                                               .manual_crafting_speed_modifier +
                                                               craftingSpeedIncrease
+            player.force.manual_mining_speed_modifier= player.force
+                                                            .manual_mining_speed_modifier +
+                                                            miningSpeedIncrease
         end
     else
         player.print(
@@ -1577,6 +1619,13 @@ function craftItem(player, item_name, quantity)
         player.print("Recipe for " .. item_name .. " not found.")
         return false
     end
+
+    -- If recipe name starts with infinity-, do not craft
+    if string.sub(item_name, 1, 9) == "infinity-" then
+        player.print("Cannot craft " .. item_name .. " as it is an infinity item.")
+        return false
+    end
+
     local ingredients = item_recipe.ingredients
     -- Check if player has all ingredients
     for _, ingredient in pairs(ingredients) do
@@ -1630,7 +1679,14 @@ function craftRecipe(player, recipe_name, quantity)
         player.print("Recipe " .. recipe_name .. " does not exist.")
         return false
     end
-    
+
+    -- If recipe name starts with infinity-, do not craft
+    if string.sub(recipe_name, 1, 9) == "infinity-" then
+        player.print("Cannot craft " .. recipe_name .. " as it is an infinity item.")
+        return false
+    end
+
+    -- Attempt to craft the recipe
     crafted=player.begin_crafting{count = quantity, recipe = recipe_name}
 
     if crafted == 0 then
@@ -1684,6 +1740,39 @@ function craftRecipeCommand(event)
     end
 
     craftRecipe(player, recipe_name, quantity)
+end
+
+function retrivePlayerItemsFromBody(player)
+    local ghosts = player.surface.find_entities_filtered {
+        name = "character-corpse",
+        position = player.position,
+        radius = 500
+    }
+
+    if (#ghosts == 0) then
+        player.print("No dead bodies found in the vicinity.")
+    else
+        for i, ghost in pairs(ghosts) do
+            if ghost.valid then
+                local inventory = ghost.get_inventory(defines.inventory.character_corpse)
+                for itemName, itemCount in pairs(inventory.get_contents()) do
+                    local insertedCount = player.insert{name = itemName, count = itemCount}
+                    if insertedCount > 0 then
+                        inventory.remove({name = itemName, count = insertedCount})
+                    end
+                end
+                player.print("Retrieved items from a dead body.")
+            end
+        end
+    end
+end
+
+function retriveBodyCommand(command)
+    local player = game.players[command.player_index]   
+    retrivePlayerItemsFromBody(player)
+end
+
+function repairEntitiesNearby()
 end
 
 function add_Commands()
@@ -1789,6 +1878,9 @@ function add_Commands()
     
     commands.remove_command("craftRecipe")
     commands.add_command("craftRecipe", "[Command]: Crafts specified quantity of a recipe if enough ingredients are available.", craftRecipeCommand)
+
+    -- commands.remove_command("retreiveBody")
+    -- commands.add_command("retreiveBody", "[Command]: Retrieves your items from nearby dead bodies.", retriveBodyCommand)
 end
 
 freeplay.on_load = function() add_Commands() end

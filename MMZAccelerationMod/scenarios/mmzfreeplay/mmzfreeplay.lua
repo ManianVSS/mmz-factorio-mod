@@ -2,251 +2,483 @@ local util = require("util")
 local crash_site = require("crash-site")
 
 local created_items = function()
-    return {
-        ["iron-plate"] = 500,
-        ["copper-plate"] = 250,
-        ["coal"] = 250,
-        ["submachine-gun"] = 1,
-        ["firearm-magazine"] = 200,
-        ["burner-mining-drill"] = 10,
-        ["stone-furnace"] = 1,
-        ["small-electric-pole"] = 50
-    }
+  return
+  {
+    ["iron-plate"] = 8,
+    ["wood"] = 1,
+    ["pistol"] = 1,
+    ["firearm-magazine"] = 10,
+    ["burner-mining-drill"] = 1,
+    ["stone-furnace"] = 1
+  }
 end
+
 
 local respawn_items = function()
-    return {["submachine-gun"] = 1, ["firearm-magazine"] = 200}
+  return
+  {
+    ["pistol"] = 1,
+    ["firearm-magazine"] = 10
+  }
 end
 
-local ship_items = function() return {["firearm-magazine"] = 8} end
+local ship_items = function()
+  return
+  {
+    ["firearm-magazine"] = 8
+  }
+end
 
-local debris_items = function() return {["iron-plate"] = 8} end
+local debris_items = function()
+  return
+  {
+    ["iron-plate"] = 8
+  }
+end
 
-local ship_parts = function() return crash_site.default_ship_parts() end
+local ship_parts = function()
+  return crash_site.default_ship_parts()
+end
 
 local chart_starting_area = function()
-    local r = global.chart_distance or 200
-    local force = game.forces.player
-    local surface = game.surfaces[1]
-    local origin = force.get_spawn_position(surface)
-    force.chart(surface,
-                {{origin.x - r, origin.y - r}, {origin.x + r, origin.y + r}})
+  local r = storage.chart_distance or 200
+  local force = game.forces.player
+  local surface = game.surfaces[1]
+  local origin = force.get_spawn_position(surface)
+  force.chart(surface, {{origin.x - r, origin.y - r}, {origin.x + r, origin.y + r}})
 end
 
-function soft_mod_setup(player)
-    if ((global["_map_initialized"] == nil) or
-        (global["_map_initialized"] == false)) then
-        global["_map_initialized"] = true
-        global["_spawn_position"] = player.position
-        global["_map_surface"] = player.surface
-        global["_aegis_on"] = false
-
-        for i = 1, #game.forces do game.forces[i].friendly_fire = false end
-
-        printBaseLayout(player)
-    end
+local get_starting_message = function()
+  if storage.custom_intro_message then
+    return storage.custom_intro_message
+  end
+  if script.active_mods["space-age"] then
+    return {"msg-intro-space-age"}
+  end
+  return {"msg-intro"}
 end
+
+local show_intro_message = function(player)
+  if storage.skip_intro then return end
+
+  if game.is_multiplayer() then
+    player.print(get_starting_message())
+  else
+    game.show_message_dialog{text = get_starting_message()}
+  end
+end
+
 
 local on_player_created = function(event)
-    local player = game.get_player(event.player_index)
-    util.insert_safe(player, global.created_items)
+  local player = game.get_player(event.player_index)
+  util.insert_safe(player, storage.created_items)
 
-    if not global.init_ran then
-        -- This is so that other mods and scripts have a chance to do remote calls before we do things like charting the starting area, creating the crash site, etc.
-        global.init_ran = true
-        chart_starting_area()
+  --  ************************* MMZ Soft Mod section start *******************************
+  if ( (storage._map_initialized == nil) or (storage._map_initialized == false) ) then 
+    init_soft_mod(player)
+  end
+  --  ************************* MMZ Soft Mod section end   *******************************
+
+  if not storage.init_ran then
+
+    --This is so that other mods and scripts have a chance to do remote calls before we do things like charting the starting area, creating the crash site, etc.
+    storage.init_ran = true
+
+    chart_starting_area()
+
+    if not storage.disable_crashsite then
+      local surface = player.surface
+      surface.daytime = 0.7
+      crash_site.create_crash_site(surface, {-5,-6}, util.copy(storage.crashed_ship_items), util.copy(storage.crashed_debris_items), util.copy(storage.crashed_ship_parts))
+      util.remove_safe(player, storage.crashed_ship_items)
+      util.remove_safe(player, storage.crashed_debris_items)
+      player.get_main_inventory().sort_and_merge()
+      if player.character then
+        player.character.destructible = false
+      end
+      storage.crash_site_cutscene_active = true
+      crash_site.create_cutscene(player, {-5, -4})
+      return
     end
 
-    if not global.skip_intro then
-        if game.is_multiplayer() then
-            player.print(global.custom_intro_message or {"msg-intro"})
-        else
-            game.show_message_dialog {
-                text = global.custom_intro_message or {"msg-intro"}
-            }
-        end
-    end
+  end
 
-    soft_mod_setup(player)
+  show_intro_message(player)
 end
 
 local on_player_respawned = function(event)
-    local player = game.get_player(event.player_index)
-    util.insert_safe(player, global.respawn_items)
+  local player = game.get_player(event.player_index)
+  util.insert_safe(player, storage.respawn_items)
 end
 
 local on_cutscene_waypoint_reached = function(event)
-    if not global.crash_site_cutscene_active then return end
-    if not crash_site.is_crash_site_cutscene(event) then return end
+  if not storage.crash_site_cutscene_active then return end
+  if not crash_site.is_crash_site_cutscene(event) then return end
 
-    local player = game.get_player(event.player_index)
+  local player = game.get_player(event.player_index)
 
-    player.exit_cutscene()
-
-    if not global.skip_intro then
-        if game.is_multiplayer() then
-            player.print(global.custom_intro_message or {"msg-intro"})
-        else
-            game.show_message_dialog {
-                text = global.custom_intro_message or {"msg-intro"}
-            }
-        end
-    end
+  player.exit_cutscene()
+  show_intro_message(player)
 end
 
 local skip_crash_site_cutscene = function(event)
-    if not global.crash_site_cutscene_active then return end
-    if event.player_index ~= 1 then return end
-    local player = game.get_player(event.player_index)
-    if player.controller_type == defines.controllers.cutscene then
-        player.exit_cutscene()
-    end
+  if not storage.crash_site_cutscene_active then return end
+  if event.player_index ~= 1 then return end
+  local player = game.get_player(event.player_index)
+  if player.controller_type == defines.controllers.cutscene then
+    player.exit_cutscene()
+  end
 end
 
 local on_cutscene_cancelled = function(event)
-    if not global.crash_site_cutscene_active then return end
-    if event.player_index ~= 1 then return end
-    global.crash_site_cutscene_active = nil
-    local player = game.get_player(event.player_index)
-    if player.gui.screen.skip_cutscene_label then
-        player.gui.screen.skip_cutscene_label.destroy()
-    end
-    if player.character then player.character.destructible = true end
-    player.zoom = 1.5
+  if not storage.crash_site_cutscene_active then return end
+  if event.player_index ~= 1 then return end
+  storage.crash_site_cutscene_active = nil
+  local player = game.get_player(event.player_index)
+  if player.gui.screen.skip_cutscene_label then
+    player.gui.screen.skip_cutscene_label.destroy()
+  end
+  if player.character then
+    player.character.destructible = true
+  end
+  player.zoom = 1.5
 end
 
 local on_player_display_refresh = function(event)
-    crash_site.on_player_display_refresh(event)
+  crash_site.on_player_display_refresh(event)
 end
 
-local freeplay_interface = {
-    get_created_items = function() return global.created_items end,
-    set_created_items = function(map)
-        global.created_items = map or
-                                   error(
-                                       "Remote call parameter to freeplay set created items can't be nil.")
-    end,
-    get_respawn_items = function() return global.respawn_items end,
-    set_respawn_items = function(map)
-        global.respawn_items = map or
-                                   error(
-                                       "Remote call parameter to freeplay set respawn items can't be nil.")
-    end,
-    set_skip_intro = function(bool) global.skip_intro = bool end,
-    get_skip_intro = function() return global.skip_intro end,
-    set_custom_intro_message = function(message)
-        global.custom_intro_message = message
-    end,
-    get_custom_intro_message = function() return global.custom_intro_message end,
-    set_chart_distance = function(value)
-        global.chart_distance = tonumber(value) or
-                                    error(
-                                        "Remote call parameter to freeplay set chart distance must be a number")
-    end,
-    get_disable_crashsite = function() return global.disable_crashsite end,
-    set_disable_crashsite = function(bool) global.disable_crashsite = bool end,
-    get_init_ran = function() return global.init_ran end,
-    get_ship_items = function() return global.crashed_ship_items end,
-    set_ship_items = function(map)
-        global.crashed_ship_items = map or
-                                        error(
-                                            "Remote call parameter to freeplay set created items can't be nil.")
-    end,
-    get_debris_items = function() return global.crashed_debris_items end,
-    set_debris_items = function(map)
-        global.crashed_debris_items = map or
-                                          error(
-                                              "Remote call parameter to freeplay set respawn items can't be nil.")
-    end,
-    get_ship_parts = function() return global.crashed_ship_parts end,
-    set_ship_parts = function(parts)
-        global.crashed_ship_parts = parts or
-                                        error(
-                                            "Remote call parameter to freeplay set ship parts can't be nil.")
-    end
+local freeplay_interface =
+{
+  get_created_items = function()
+    return storage.created_items
+  end,
+  set_created_items = function(map)
+    storage.created_items = map or error("Remote call parameter to freeplay set created items can't be nil.")
+  end,
+  get_respawn_items = function()
+    return storage.respawn_items
+  end,
+  set_respawn_items = function(map)
+    storage.respawn_items = map or error("Remote call parameter to freeplay set respawn items can't be nil.")
+  end,
+  set_skip_intro = function(bool)
+    storage.skip_intro = bool
+  end,
+  get_skip_intro = function()
+    return storage.skip_intro
+  end,
+  set_custom_intro_message = function(message)
+    storage.custom_intro_message = message
+  end,
+  get_custom_intro_message = function()
+    return storage.custom_intro_message
+  end,
+  set_chart_distance = function(value)
+    storage.chart_distance = tonumber(value) or error("Remote call parameter to freeplay set chart distance must be a number")
+  end,
+  get_disable_crashsite = function()
+    return storage.disable_crashsite
+  end,
+  set_disable_crashsite = function(bool)
+    storage.disable_crashsite = bool
+  end,
+  get_init_ran = function()
+    return storage.init_ran
+  end,
+  get_ship_items = function()
+    return storage.crashed_ship_items
+  end,
+  set_ship_items = function(map)
+    storage.crashed_ship_items = map or error("Remote call parameter to freeplay set created items can't be nil.")
+  end,
+  get_debris_items = function()
+    return storage.crashed_debris_items
+  end,
+  set_debris_items = function(map)
+    storage.crashed_debris_items = map or error("Remote call parameter to freeplay set respawn items can't be nil.")
+  end,
+  get_ship_parts = function()
+    return storage.crashed_ship_parts
+  end,
+  set_ship_parts = function(parts)
+    storage.crashed_ship_parts = parts or error("Remote call parameter to freeplay set ship parts can't be nil.")
+  end
 }
 
-if not remote.interfaces["mmzfreeplay"] then
-    remote.add_interface("mmzfreeplay", freeplay_interface)
+if not remote.interfaces["freeplay"] then
+  remote.add_interface("freeplay", freeplay_interface)
 end
 
 local is_debug = function()
-    local surface = game.surfaces.nauvis
-    local map_gen_settings = surface.map_gen_settings
-    return map_gen_settings.width == 50 and map_gen_settings.height == 50
+  local surface = game.surfaces.nauvis
+  local map_gen_settings = surface.map_gen_settings
+  return map_gen_settings.width == 50 and map_gen_settings.height == 50
 end
 
-local mmzfreeplay = {}
+local init_ending_info = function()
+  local is_space_age = script.active_mods["space-age"]
+  local info =
+  {
+    image_path = is_space_age and "__base__/script/freeplay/victory-space-age.png" or "__base__/script/freeplay/victory.png",
+    title = {"gui-game-finished.victory"},
+    message = is_space_age and {"victory-message-space-age"} or {"victory-message"},
+    bullet_points =
+    {
+      {"victory-bullet-point-1"},
+      {"victory-bullet-point-2"},
+      {"victory-bullet-point-3"},
+      {"victory-bullet-point-4"}
+    },
+    final_message = {"victory-final-message"},
+  }
+  game.set_win_ending_info(info)
+end
 
-mmzfreeplay.events = {
-    [defines.events.on_player_created] = on_player_created,
-    [defines.events.on_player_respawned] = on_player_respawned,
-    [defines.events.on_cutscene_waypoint_reached] = on_cutscene_waypoint_reached,
-    ["crash-site-skip-cutscene"] = skip_crash_site_cutscene,
-    [defines.events.on_player_display_resolution_changed] = on_player_display_refresh,
-    [defines.events.on_player_display_scale_changed] = on_player_display_refresh,
-    [defines.events.on_cutscene_cancelled] = on_cutscene_cancelled
+local freeplay = {}
+
+freeplay.events =
+{
+  [defines.events.on_player_created] = on_player_created,
+  [defines.events.on_player_respawned] = on_player_respawned,
+  [defines.events.on_cutscene_waypoint_reached] = on_cutscene_waypoint_reached,
+  ["crash-site-skip-cutscene"] = skip_crash_site_cutscene,
+  [defines.events.on_player_display_resolution_changed] = on_player_display_refresh,
+  [defines.events.on_player_display_scale_changed] = on_player_display_refresh,
+  [defines.events.on_cutscene_cancelled] = on_cutscene_cancelled
 }
 
-mmzfreeplay.on_configuration_changed = function()
-    global.created_items = global.created_items or created_items()
-    global.respawn_items = global.respawn_items or respawn_items()
-    global.crashed_ship_items = global.crashed_ship_items or ship_items()
-    global.crashed_debris_items = global.crashed_debris_items or debris_items()
-    global.crashed_ship_parts = global.crashed_ship_parts or ship_parts()
+freeplay.on_configuration_changed = function()
+  storage.created_items = storage.created_items or created_items()
+  storage.respawn_items = storage.respawn_items or respawn_items()
+  storage.crashed_ship_items = storage.crashed_ship_items or ship_items()
+  storage.crashed_debris_items = storage.crashed_debris_items or debris_items()
+  storage.crashed_ship_parts = storage.crashed_ship_parts or ship_parts()
 
-    if not global.init_ran then
-        -- migrating old saves.
-        global.init_ran = #game.players > 0
+  if not storage.init_ran then
+    -- migrating old saves.
+    storage.init_ran = #game.players > 0
+  end
+  init_ending_info()
+end
+
+
+
+freeplay.on_init = function()
+  game.allow_tip_activation = true
+  storage.created_items = created_items()
+  storage.respawn_items = respawn_items()
+  storage.crashed_ship_items = ship_items()
+  storage.crashed_debris_items = debris_items()
+  storage.crashed_ship_parts = ship_parts()
+  add_Commands()
+  if is_debug() then
+    storage.skip_intro = true
+    storage.disable_crashsite = true
+  end
+
+  init_ending_info()
+
+end
+
+--  ************************* MMZ Soft Mod section start *******************************
+
+local give_first_player_items = function(player)    
+    player.insert {name = "iron-plate", count = 500}
+    player.insert {name = "copper-plate", count = 300}
+    player.insert {name = "steel-plate", count = 250}
+    player.insert {name = "wood", count = 100}
+    player.insert {name = "electric-mining-drill", count = 1}
+    player.insert {name = "electric-furnace", count = 10}
+    player.insert {name = "small-electric-pole", count = 10}
+end
+
+function deepcopy(orig)
+    local orig_type = type(orig)
+    local copy
+    if orig_type == 'table' then
+        copy = {}
+        for orig_key, orig_value in next, orig, nil do
+            copy[deepcopy(orig_key)] = deepcopy(orig_value)
+        end
+        setmetatable(copy, deepcopy(getmetatable(orig)))
+    else -- number, string, boolean, etc
+        copy = orig
+    end
+    return copy
+end
+
+function createInitialEntity(player, entity_name, x, y)
+    initial_entity = player.surface.create_entity({
+        name = entity_name,
+        force = player.force,
+        amount = 1,
+        position = {x, y}
+    })
+    initial_entity.minable = false
+    initial_entity.destructible = false
+    return initial_entity
+end
+
+function mmzPrint(player, tileToFillWith)
+
+    -- Write MMZ in tiles
+    local tiles = {}
+    local pos = player.position
+
+    if (tileToFillWith == nil) then
+        tileToFillWith = "dirt-1"
+    end
+
+    for y = pos.y - 4, pos.y + 4 do
+        table.insert(tiles, {
+            name = tileToFillWith,
+            position = {pos.x - 14, y}
+        })
+        table.insert(tiles, {
+            name = tileToFillWith,
+            position = {pos.x - 6, y}
+        })
+        table.insert(tiles, {
+            name = tileToFillWith,
+            position = {pos.x - 4, y}
+        })
+        table.insert(tiles, {
+            name = tileToFillWith,
+            position = {pos.x + 4, y}
+        })
+    end
+
+    for i = 0, 4 do
+        table.insert(tiles, {
+            name = tileToFillWith,
+            position = {pos.x - 14 + i, pos.y - 4 + i}
+        })
+        table.insert(tiles, {
+            name = tileToFillWith,
+            position = {pos.x - 13 + i, pos.y - 4 + i}
+        })
+        table.insert(tiles, {
+            name = tileToFillWith,
+            position = {pos.x - 4 + i, pos.y - 4 + i}
+        })
+        table.insert(tiles, {
+            name = tileToFillWith,
+            position = {pos.x - 3 + i, pos.y - 4 + i}
+        })
+
+        table.insert(tiles, {
+            name = tileToFillWith,
+            position = {pos.x - 10 + i, pos.y - i}
+        })
+        table.insert(tiles, {
+            name = tileToFillWith,
+            position = {pos.x - 9 + i, pos.y - i}
+        })
+        table.insert(tiles, {
+            name = tileToFillWith,
+            position = {pos.x + i, pos.y - i}
+        })
+        table.insert(tiles, {
+            name = tileToFillWith,
+            position = {pos.x + 1 + i, pos.y - i}
+        })
+    end
+
+    for i = 0, 9 do
+        table.insert(tiles, {
+            name = tileToFillWith,
+            position = {pos.x + 6 + i, pos.y - 4}
+        })
+        -- table.insert(tiles, {name=tileToFillWith, position={pos.x+6+i,pos.y-3}})
+
+        table.insert(tiles, {
+            name = tileToFillWith,
+            position = {pos.x + 6 + i, pos.y + 4 - i}
+        })
+        table.insert(tiles, {
+            name = tileToFillWith,
+            position = {pos.x + 7 + i, pos.y + 4 - i}
+        })
+
+        -- table.insert(tiles, {name=tileToFillWith, position={pos.x+6+i,pos.y+3}})
+        table.insert(tiles, {
+            name = tileToFillWith,
+            position = {pos.x + 6 + i, pos.y + 4}
+        })
+    end
+
+    player.surface.set_tiles(tiles)
+
+    -- initial_playerPort = player.surface.create_entity({
+    --     name = "player-port",
+    --     force = player.force,
+    --     amount = 1,
+    --     position = {player.position.x, player.position.y}
+    -- })
+    -- initial_playerPort.minable = false
+    -- initial_playerPort.destructible = false
+end
+
+function mmzPrintCommand(event)
+    local player = game.players[event.player_index]
+    if (player.admin == true) then
+        -- for i=1,100 do
+        mmzPrint(player, "out-of-map")
+        -- end		
     end
 end
 
-mmzfreeplay.on_init = function()
-    global.created_items = created_items()
-    global.respawn_items = respawn_items()
-    global.crashed_ship_items = ship_items()
-    global.crashed_debris_items = debris_items()
-    global.crashed_ship_parts = ship_parts()
-    add_Commands()
-    if is_debug() then
-        global.skip_intro = true
-        global.disable_crashsite = true
-    end
-end
 
-mmzfreeplay.on_load = function() add_Commands() end
+
+function init_soft_mod(player)
+
+    storage._map_surface=player.surface
+	storage._map_initialized=true
+	storage._spawn_position=player.position
+
+	player.force.friendly_fire=false	
+	player.force.character_inventory_slots_bonus=player.force.character_inventory_slots_bonus+5000
+	player.force.character_running_speed_modifier = 3
+	-- player.force.manual_crafting_speed_modifier=200
+	-- player.force.manual_mining_speed_modifier=100
+	player.force.character_build_distance_bonus = 5000
+	player.force.character_reach_distance_bonus = 5000	
+	player.force.character_resource_reach_distance_bonus = 5000
+
+    player.force.recipes["steel-plate"].enabled=true
+	player.force.recipes["solar-panel"].enabled=true
+    
+    
+    -- player.force.recipes["loader"].hidden=false
+    player.force.recipes["loader"].enabled=true
+    -- player.force.recipes["fast-loader"].hidden=false
+    player.force.recipes["loader"].enabled=true
+    -- player.force.recipes["express-loader"].hidden=false
+    player.force.recipes["express-loader"].enabled=true
+
+
+	-- player.insert{name="submachine-gun", count=1}  
+	-- player.insert{name="firearm-magazine", count=200} 
+
+    give_first_player_items(player)
+
+    player.print("Soft mod initialized")
+
+    printBaseLayout(player)
+end
 
 -- Need to optimize the function instead of too much copy paste
 function equipPlayer(player)
     player.insert {name = "power-armor-mk2", count = 1}
     local p_armor = player.get_inventory(5)[1].grid
-    for i = 1, 4 do p_armor.put({name = "fusion-reactor-equipment"}) end
+    for i = 1, 4 do p_armor.put({name = "fission-reactor-equipment"}) end
     for i = 1, 6 do p_armor.put({name = "personal-laser-defense-equipment"}) end
     p_armor.put({name = "night-vision-equipment"})
-    for i = 1, 6 do p_armor.put({name = "battery-mk2-equipmen"}) end
+    for i = 1, 6 do p_armor.put({name = "battery-mk2-equipment"}) end
 
     player.insert {name = "submachine-gun", count = 1}
     player.insert {name = "uranium-rounds-magazine", count = 1000}
-    -- player.insert {
-    --     name = "rocket-launcher",
-    --     count = 1
-    -- }
-    -- player.insert {
-    --     name = "atomic-bomb",
-    --     count = 5
-    -- }
-    -- player.insert {
-    --   name = "loader",
-    --   count = 50
-    -- }
-    -- player.insert {
-    --   name = "fast-loader",
-    --   count = 50
-    -- }
-    -- player.insert {
-    --   name = "express-loader",
-    --   count = 50
-    -- }
 end
 
 function pandorasBox(player)
@@ -273,7 +505,7 @@ function createInitialChest(player, xpos, ypos)
     })
     initial_chest.minable = false
     initial_chest.destructible = false
-    table.insert(global["initial_chests"], initial_chest)
+    table.insert(storage["initial_chests"], initial_chest)
     return initial_chest
 end
 
@@ -282,23 +514,74 @@ function printBaseLayout(player, tileToFillWith)
     -- waterFillArea(player, 14, 14, 15, 15)
     -- landFillArea(player, 14, 14, 15, 15, "dirt-7")
     -- player.teleport {player.position.x + 15, player.position.y + 15}
-
+    base_size=40
     landFillArea(player, 8, 8, 0, 0, "dirt-7")
+    tileRing(player, 65, 1, "water", 10)
+    generateResources(player, 500, 16, base_size)
 
+    player.teleport {player.position.x - base_size -30, player.position.y - base_size -30}
+    waterFillArea(player, 30, 30, base_size+ 30, base_size+30)
+    landFillArea(player, 30, 30, base_size+30, base_size+30, "grass-1")
+    player.teleport {player.position.x + base_size+30, player.position.y + base_size+30}
+
+    -- Turrets
+    for i = 1, 16 do
+        createInitialEntity(player, "laser-turret", player.position.x + 20, player.position.y - 18 + i * 2 )
+        createInitialEntity(player, "laser-turret", player.position.x - 20, player.position.y - 18 + i * 2 )
+        createInitialEntity(player, "laser-turret", player.position.x - 18 + i * 2, player.position.y + 20 )
+        createInitialEntity(player, "laser-turret", player.position.x - 18 + i * 2, player.position.y - 20 )
+    end
+
+    -- Solar Panels
+    for i = 1, 33 do
+         for j = 0, 5 do
+            createInitialEntity(player, "solar-panel", player.position.x + 22 + j, player.position.y - 19 + i )
+            createInitialEntity(player, "solar-panel", player.position.x - 23 - j, player.position.y - 19 + i )
+            createInitialEntity(player, "solar-panel", player.position.x - 19 + i, player.position.y - 23 - j )
+            createInitialEntity(player, "solar-panel", player.position.x - 19 + i, player.position.y + 22 + j )
+        end
+    end
+
+    -- Accumulators
+    for i = 0, 24 do
+        for j = 0, 8 do
+            createInitialEntity(player, "accumulator", player.position.x - 12 + i, player.position.y + 10 + j )
+            createInitialEntity(player, "accumulator", player.position.x - 12 + i, player.position.y - 10 - j )
+            -- initial_accumulator.energy = 10000
+        end
+    end
+    
+    -- Lights
+    for i = 1, 11 do
+        createInitialEntity(player, "small-lamp", player.position.x + 33, player.position.y - 19 + i * 3 )
+        createInitialEntity(player, "small-lamp", player.position.x - 33, player.position.y - 19 + i * 3 )
+        createInitialEntity(player, "small-lamp", player.position.x - 19 + i * 3, player.position.y - 33 )
+        createInitialEntity(player, "small-lamp", player.position.x - 19 + i * 3, player.position.y + 33 )
+    end
+
+    -- Substations
+    for i = -2, 2 do
+        for j = -2, 2 do
+            -- If i and j not equal 0         
+            if not (i == 0 and j == 0) then
+                createInitialEntity(player, "substation", player.position.x + 18*i, player.position.y + 18*j )
+            end
+        end
+    end   
+    
     -- Intial steel chests
     initial_chests = {}
-    global["initial_chests"] = initial_chests    
+    storage["initial_chests"] = initial_chests    
     count = 1
-    for i = 0, 4 do
-        for j = 0, 4 do
-            createInitialChest(player, player.position.x - i - 3,
-                               player.position.y - j - 3)
-            createInitialChest(player, player.position.x - i - 3,
-                               player.position.y + j + 2)
-            createInitialChest(player, player.position.x + i + 2,
-                               player.position.y - j - 3)
-            createInitialChest(player, player.position.x + i + 2,
-                               player.position.y + j + 2)
+    for i = 0, 23 do
+        for j = 0, 1 do
+            createInitialChest(player, player.position.x - 12 + i, player.position.y + 7 + j)
+            createInitialChest(player, player.position.x - 12 + i, player.position.y - 7 - j)
+            
+            -- createInitialChest(player, player.position.x - i - 6, player.position.y - j - 6)
+            -- createInitialChest(player, player.position.x - i - 6, player.position.y + j + 5)
+            -- createInitialChest(player, player.position.x + i + 5, player.position.y - j - 6)
+            -- createInitialChest(player, player.position.x + i + 5, player.position.y + j + 5)
         end
     end
 
@@ -326,38 +609,41 @@ function printBaseLayout(player, tileToFillWith)
             end
         end
     end
+
+     mmzPrint(player, "dirt-7")
 end
 
-function tileRing(player, size, thichness, tileToFillWith)
+function tileRing(player, size, thichness, tileToFillWith, gap)
     -- waterFillArea(player,size,thichness,0,-size/2)
     -- waterFillArea(player,thichness,size,-size/2,0)
     -- waterFillArea(player,thichness,size,size/2,0)
     -- waterFillArea(player,size,thichness,0,size/2)
 
     if (tileToFillWith == nil) then tileToFillWith = "water" end
+    if (gap==nil) then gap=0 end
 
     local tiles = {}
     local pos = player.position
-    for x = pos.x - size / 2, pos.x + size / 2 do
+    for x = pos.x - size / 2 + gap, pos.x + size / 2 - gap do
         for y = pos.y - size / 2 - thichness, pos.y - size / 2 do
             local t = player.surface.get_tile(x, y)
             table.insert(tiles, {name = tileToFillWith, position = {x, y}})
         end
     end
     for x = pos.x + size / 2, pos.x + size / 2 + thichness do
-        for y = pos.y - size / 2, pos.y + size / 2 do
+        for y = pos.y - size / 2 + gap , pos.y + size / 2 - gap do
             local t = player.surface.get_tile(x, y)
             table.insert(tiles, {name = tileToFillWith, position = {x, y}})
         end
     end
-    for x = pos.x - size / 2, pos.x + size / 2 do
+    for x = pos.x - size / 2 + gap , pos.x + size / 2 - gap do
         for y = pos.y + size / 2, pos.y + size / 2 + thichness do
             local t = player.surface.get_tile(x, y)
             table.insert(tiles, {name = tileToFillWith, position = {x, y}})
         end
     end
     for x = pos.x - size / 2 - thichness, pos.x - size / 2 do
-        for y = pos.y - size / 2, pos.y + size / 2 do
+        for y = pos.y - size / 2 + gap , pos.y + size / 2 - gap do
             local t = player.surface.get_tile(x, y)
             table.insert(tiles, {name = tileToFillWith, position = {x, y}})
         end
@@ -431,7 +717,7 @@ function get_accessible_containers(player, radius)
         position = player.position,
         radius = radius
     }
-    inventories = {player, table.unpack(global["initial_chests"])}
+    inventories = {player, table.unpack(storage["initial_chests"])}
     for i = 1, #nearby_entities do
         if (nearby_entities[i].name == "wooden-chest") or
             (nearby_entities[i].name == "iron-chest") or
@@ -468,33 +754,77 @@ function deconstruct(player, radius)
     end
 end
 
+
 function reviveCommand(command)
     local player = game.players[command.player_index]
     local constructRadius = 200
 
+    -- Check if player is  in map mode. If so, return
+    if (player.controller_type == defines.controllers.map_editor) then
+        player.print("Cannot revive entity ghosts while in map editor mode.")
+        return
+    end
+
     -- if (command.parameter ~= nil) then constructRadius = command.parameter end
     deconstruct(player, constructRadius)
 
-    furnaceEntities = player.surface.find_entities_filtered {
+    ghost_entities = player.surface.find_entities_filtered {
         type = "entity-ghost",
         position = player.position,
         radius = constructRadius
     }
+
+    -- If player is not nil 
+    if (player == nil) then        
+        return
+    end
+
+    --if player.cheat_mode is set to true, revive all ghosts without checking for items
+    if (player.cheat_mode == true) then
+        for i = 1, #ghost_entities do
+            -- if ghost name starts with infinity-, then skip the item
+            if string.sub(ghost_entities[i].ghost_name, 1, 9) == "infinity-" then
+                player.print("Skipping revival of " .. ghost_entities[i].ghost_name .. " as it is an infinity chest ghost.")               
+            else
+                ghost_entities[i].revive()
+            end
+        end
+        return
+    end
+
     inventories = get_accessible_containers(player, constructRadius)
 
-    for i = 1, #furnaceEntities do
-        local ghostName = furnaceEntities[i].ghost_name
+    for i = 1, #ghost_entities do
+        local ghostName = ghost_entities[i].ghost_name
 
-        if ((ghostName == "straight-rail") or (ghostName == "curved-rail")) then
+        --If ghost name has -rail as a substring, set ghost name to rail
+        start_index, end_index = string.find(ghostName, "-rail")
+        if start_index ~= nil and end_index ~= nil then
             ghostName = "rail"
         end
 
-        container_with_entity = find_container_with_entity(ghostName,
-                                                           inventories)
+        container_with_entity = find_container_with_entity(ghostName, inventories)
         if container_with_entity ~= nil then
-            placed_entity_status = furnaceEntities[i].silent_revive()
+            placed_entity_status = ghost_entities[i].silent_revive()
             if placed_entity_status then
                 container_with_entity.remove_item({name = ghostName})
+            end
+        else
+            -- if ghost name starts with infinity-, then skip the item
+            if string.sub(ghost_entities[i].ghost_name, 1, 9) ~= "infinity-" then
+                              
+                -- Try to craft the entity if not found in any container
+                player.print("Not enough " .. ghostName ..
+                    " to revive entity ghost.. Will attempt to craft one.")
+                if craftItem(player, ghostName, 1) then
+                    placed_entity_status = ghost_entities[i].silent_revive()
+                    if placed_entity_status then                    
+                        player.remove_item({name = ghostName, count = 1})
+                    end
+                else
+                    player.print("Failed to craft " .. ghostName ..
+                        ". Cannot revive entity ghost.")
+                end
             end
         end
     end
@@ -850,7 +1180,7 @@ function depositPlayerItemsToChest(player)
         for i, item_name in pairs(depositable_items_list) do
             item_count = player.get_item_count(item_name)
             if item_count > 0 then
-                for ci, initial_chest in pairs(global["initial_chests"]) do
+                for ci, initial_chest in pairs(storage["initial_chests"]) do
                     if initial_chest.can_insert({
                         name = item_name,
                         count = item_count
@@ -884,12 +1214,21 @@ function depositIntoChestsCommand(command)
 end
 
 function teleportCommand(command)
-    local player = game.players[command.player_index]
+    local player = game.players[command.player_index]   
 
     if (command.parameter == nil) then
-        player.teleport(global["_spawn_position"])
+        player.teleport(storage["_spawn_position"])
         game.print(player.name .. " has teleported to the their main spawn area")
-    else -- (command.parameter ~= nil) then	
+    else -- (command.parameter ~= nil) then
+        local paramPlayer = getPlayerByName(command.parameter)
+
+        if  (paramPlayer ~= null) then
+            player.teleport(paramPlayer.position.x, paramPlayer.position.y)
+            player.print("You teleported to " .. command.parameter)
+            paramPlayer.print(player.name .. " teleport to you.")
+            return
+        end
+
         proximityTags = player.force.find_chart_tags(player.surface, {
             left_top = {-1000000, -1000000},
             right_bottom = {1000000, 1000000}
@@ -955,89 +1294,113 @@ function getPlayerByName(playerName)
     return nil
 end
 
-function generateResources(paramPlayer, density, size)
-    local surface = paramPlayer.surface
-    local ore = nil
-    local patchOffset = 5
+-- Deletes all resource entities in a given rectangular area
+-- surface: LuaSurface object (e.g., game.surfaces["nauvis"])
+-- pos1, pos2: tables with {x=..., y=...} defining opposite corners of the area
+function delete_resources_in_area(surface, pos1, pos2)
+    if not (surface and surface.valid) then
+        log("Invalid surface provided.")
+        return
+    end
+
+    -- Find all resource entities in the area
+    local resources = surface.find_entities_filtered{
+        area = {pos1, pos2},
+        type = "resource"
+    }
+
+    -- Destroy each resource entity found
+    for _, entity in pairs(resources) do
+        if entity.valid then
+            entity.destroy()
+        end
+    end
+
+    log("Deleted " .. tostring(#resources) .. " resource entities.")
+end
+
+function tileFillArea(tileToFillWith, surface, pos1, pos2)
+    if (tileToFillWith == nil) then tileToFillWith = "grass-1" end
+    local tiles = {}
+    for y = pos1.y, pos2.y do
+        for x = pos1.x, pos2.x do
+            local t = surface.get_tile(x, y)
+            -- if t.name == "water" or t.name == "deepwater" then
+            table.insert(tiles, {name = tileToFillWith, position = {x, y}})
+            -- end
+        end
+    end
+    surface.set_tiles(tiles)
+end
+
+function generateResource(resource_name,player, density, pos1, pos2)
+    -- Chart the area    
+    player.force.chart(player.surface, {
+        {pos1.x, pos1.y},
+        {pos2.x, pos2.y}
+    })
+
+    -- landfill the area
+    tileFillArea('grass-1', player.surface, pos1, pos2)
+
+    -- Delete resources in area before generating
+    -- delete_resources_in_area(player.surface, pos1, pos2)
+
+   for y = pos1.y, pos2.y do
+        for x = pos1.x, pos2.x do
+            if player.surface.get_tile(x, y).collides_with(
+                "ground_tile") then
+                player.surface.create_entity({
+                    name = resource_name,
+                    amount = density,
+                    position = {x,  y}
+                })
+            end
+        end
+    end
+end
+
+function generateResources(player, density, size, patchOffset)
+    if (density == nil) then density = 1000 end
+
+    if (size == nil) then size = 100 end
+
+    if (patchOffset == nil) then patchOffset = 10 end
+
+    local surface = player.surface
+    local center = player.position
+    local center_x= player.position.x
+    local center_y= player.position.y
+
+    local ore = nil    
     local oilPatchSide = size / 6
 
-    if (density == nil) then density = 10000 end
+    -- Delete resources in area of size  before generating
+    delete_resources_in_area(player.surface, 
+    {x=center_x-patchOffset-size-50,   y=center_y-patchOffset-size-50},
+    {x=center_x+patchOffset+size+50,   y=center_y+patchOffset+size+50}
+    )
 
-    if (size == nil) then size = 140 end
+    generateResource('coal', player, density,
+    {x=center_x-patchOffset-size,   y=center_y-patchOffset-size},
+    {x=center_x+patchOffset-1,        y=center_y-patchOffset}
+    )
 
-    local randomX = paramPlayer.position.x + size + 10
-    local randomY = paramPlayer.position.y + size + 10
+    generateResource('iron-ore', player, density,
+    {x=center_x+patchOffset,        y=center_y-patchOffset-size},
+    {x=center_x+patchOffset+size,   y=center_y+patchOffset-1}
+    )
 
-    -- waterFillArea(paramPlayer, 2 * size + 16, 2 * size + 16, size + 10, size + 10)
-    landFillArea(paramPlayer, size + 8, size + 8, size + 10, size + 10)
+    generateResource('copper-ore', player, density,
+    {x=center_x-patchOffset-size,   y=center_y-patchOffset+1},
+    {x=center_x-patchOffset,        y=center_y+patchOffset+size}
+    )
 
-    for y = -size, size do
-        for x = -patchOffset - size, -patchOffset - size / 2 do
-            if surface.get_tile(randomX + x, randomY + y).collides_with(
-                "ground-tile") then
-                surface.create_entity({
-                    name = "coal",
-                    amount = 2 * density,
-                    position = {randomX + x, randomY + y}
-                })
-            end
-        end
-    end
+    generateResource('stone', player, density,
+    {x=center_x-patchOffset+1,        y=center_y+patchOffset},
+    {x=center_x+patchOffset+size,   y=center_y+patchOffset+size}
+    )
 
-    for y = -size, size do
-        for x = -size / 2, 3 * size / 2 do
-            if surface.get_tile(randomX + x, randomY + y).collides_with(
-                "ground-tile") then
-                surface.create_entity({
-                    name = "iron-ore",
-                    amount = 3 * density,
-                    position = {randomX + x, randomY + y}
-                })
-            end
-        end
-    end
-
-    for y = -size, size do
-        for x = 3 * size / 2 + patchOffset, 5 * size / 2 + patchOffset do
-            if surface.get_tile(randomX + x, randomY + y).collides_with(
-                "ground-tile") then
-                surface.create_entity({
-                    name = "copper-ore",
-                    amount = 2 * density,
-                    position = {randomX + x, randomY + y}
-                })
-            end
-        end
-    end
-
-    for y = -size, size do
-        for x = 5 * size / 2 + 2 * patchOffset, 3 * size + 2 * patchOffset do
-            if surface.get_tile(randomX + x, randomY + y).collides_with(
-                "ground-tile") then
-                surface.create_entity({
-                    name = "stone",
-                    amount = density,
-                    position = {randomX + x, randomY + y}
-                })
-            end
-        end
-    end
-
-    for y = 0, oilPatchSide do
-        for x = 0, oilPatchSide do
-            surface.create_entity({
-                name = "crude-oil",
-                amount = 500 * density,
-                position = {
-                    randomX + size + 10 + 1 + x * 7,
-                    randomY + size + 10 + 1 + y * 7
-                }
-            })
-        end
-    end
-
-    waterFillArea(paramPlayer, size / 2, size / 2, -size / 2 - 10,
-                  -size / 2 - 10)
 end
 
 function landFillCommand(event)
@@ -1071,26 +1434,48 @@ function waterFillCommand(event)
     end
 end
 
+function deleteResourcesCommand(event)
+    local player = game.players[event.player_index]
+    
+     -- Delete resources in area before generating
+    local surface = player.surface
+    local center = player.position
+    local radius = 250
+    
+    delete_resources_in_area(
+        surface,
+        {x = center.x - radius, y = center.y - radius},
+        {x = center.x + radius, y = center.y + radius}
+    )
+end
+
 function generateResourcesCommand(event)
     local player = game.players[event.player_index]
-    if (player.admin == true) then generateResources(player, 3000, 80) end
+    if (player.admin == true) then generateResources(player, 1000, 20) end
 end
 
 function aegisCommand(event)
     local player = game.players[event.player_index]
     if (player.admin == true) then
         local craftingSpeedIncrease = 10000
+        local miningSpeedIncrease = 10000
 
-        if (global["_aegis_on"]) then
-            global["_aegis_on"] = false
+        if (storage["_aegis_on"]) then
+            storage["_aegis_on"] = false
             player.force.manual_crafting_speed_modifier = player.force
                                                               .manual_crafting_speed_modifier -
                                                               craftingSpeedIncrease
+            player.force.manual_mining_speed_modifier= player.force
+                                                            .manual_mining_speed_modifier -
+                                                            miningSpeedIncrease
         else
-            global["_aegis_on"] = true
+            storage["_aegis_on"] = true
             player.force.manual_crafting_speed_modifier = player.force
                                                               .manual_crafting_speed_modifier +
                                                               craftingSpeedIncrease
+            player.force.manual_mining_speed_modifier= player.force
+                                                            .manual_mining_speed_modifier +
+                                                            miningSpeedIncrease
         end
     else
         player.print(
@@ -1214,10 +1599,10 @@ end
 function enableAllRecipesCommand(event)
     local player = game.players[event.player_index]
     if (player.admin == true) then
-        -- if (global["_all_recipes_on"] == nil) or (global["_all_recipes_on"]==false) then
+        -- if (storage["_all_recipes_on"] == nil) or (storage["_all_recipes_on"]==false) then
         player.force.enable_all_recipes()
-        player.force.recipes["electric-energy-interface"].enabled = false
-        --   global["_all_recipes_on"]=rue
+        -- player.force.recipes["electric-energy-interface"].enabled = false
+        --   storage["_all_recipes_on"]=rue
         -- else
         --   player.reset_recipes()
         -- end
@@ -1227,78 +1612,278 @@ function enableAllRecipesCommand(event)
     end
 end
 
+function craftItem(player, item_name, quantity)
+    -- Craft a specified item. Read the recipe from game data.
+    local item_recipe = player.force.recipes[item_name]
+    if item_recipe == nil then
+        player.print("Recipe for " .. item_name .. " not found.")
+        return false
+    end
+
+    -- If recipe name starts with infinity-, do not craft
+    if string.sub(item_name, 1, 9) == "infinity-" then
+        player.print("Cannot craft " .. item_name .. " as it is an infinity item.")
+        return false
+    end
+
+    local ingredients = item_recipe.ingredients
+    -- Check if player has all ingredients
+    for _, ingredient in pairs(ingredients) do
+
+        -- Ignore fluid ingredients for now
+        if ingredient.type == "fluid" then
+            player.print("Cannot craft " .. item_name .. " because it requires fluid " ..
+                             ingredient.name .. ".")
+            return false
+        end
+
+        local ing_name = ingredient.name
+        local ing_count = ingredient.amount * quantity
+
+        -- Check if player has enough of the ingredient or if player is admin
+        if player.get_item_count(ing_name) < ing_count then
+            --Try crafting the required item if recipe exists
+            if player.force.recipes[ing_name] ~= nil then
+                local crafted = craftItem(player, ing_name,
+                                         math.ceil(ing_count /
+                                                   player.force.recipes[ing_name]
+                                                       .products[1].amount))
+                
+                if not crafted then
+                     player.print("Could not craft sufficient " .. ing_name .. " to craft " ..
+                             item_name .. "(s).")
+                    return false                
+                end
+            else
+                player.print("Not enough " .. ing_name .. " to craft " ..
+                             quantity .. " " .. item_name .. "(s).")
+                return false
+            end
+        end
+    end
+    -- Remove ingredients from player inventory
+    for _, ingredient in pairs(ingredients) do
+        local ing_name = ingredient.name
+        local ing_count = ingredient.amount * quantity
+        player.remove_item({name = ing_name, count = ing_count})
+    end
+    -- Add crafted items to player inventory
+    local prod_count = item_recipe.products[1].amount * quantity
+    player.insert({name = item_name, count = prod_count})
+    return true
+end
+
+function craftRecipe(player, recipe_name, quantity)
+    -- Check if the recipe exists
+    if not player.force.recipes[recipe_name] then
+        player.print("Recipe " .. recipe_name .. " does not exist.")
+        return false
+    end
+
+    -- If recipe name starts with infinity-, do not craft
+    if string.sub(recipe_name, 1, 9) == "infinity-" then
+        player.print("Cannot craft " .. recipe_name .. " as it is an infinity item.")
+        return false
+    end
+
+    -- Attempt to craft the recipe
+    crafted=player.begin_crafting{count = quantity, recipe = recipe_name}
+
+    if crafted == 0 then
+        -- Try crafting the recipe manually
+        local success = craftItem(player, recipe_name, quantity)
+        if not success then
+            player.print("Not enough ingredients to craft " .. quantity .. " of " .. recipe_name .. ".")
+            -- Print the ingredients needed
+            local item_recipe = player.force.recipes[recipe_name]
+            local ingredients = item_recipe.ingredients
+            player.print("Ingredients needed:")
+            for _, ingredient in pairs(ingredients) do
+                local ing_name = ingredient.name
+                local ing_count = ingredient.amount * quantity
+                player.print("- " .. ing_count .. " of " .. ing_name)
+            end
+            return false
+        else
+            player.print(quantity .. " of " .. recipe_name .. " has been crafted directly.")
+            return true
+        end
+    else
+        player.print(quantity .. " of " .. recipe_name .. " is set to be crafted.")
+        return true
+    end
+end
+
+function craftRecipeCommand(event)
+    local player = game.players[event.player_index]
+    if (event.parameter == nil) then
+        player.print("Recipe name and quantity not passed.")
+        return
+    end
+
+    local params = {}
+    for word in string.gmatch(event.parameter, "%S+") do
+        table.insert(params, word)
+    end
+
+    if #params < 2 then
+        player.print("Please provide both recipe name and quantity.")
+        return
+    end
+
+    local recipe_name = params[1]
+    local quantity = tonumber(params[2])
+
+    if quantity == nil then
+        player.print("Quantity must be a number.")
+        return
+    end
+
+    craftRecipe(player, recipe_name, quantity)
+end
+
+function retrivePlayerItemsFromBody(player)
+    local ghosts = player.surface.find_entities_filtered {
+        name = "character-corpse",
+        position = player.position,
+        radius = 500
+    }
+
+    if (#ghosts == 0) then
+        player.print("No dead bodies found in the vicinity.")
+    else
+        for i, ghost in pairs(ghosts) do
+            if ghost.valid then
+                local inventory = ghost.get_inventory(defines.inventory.character_corpse)
+                for itemName, itemCount in pairs(inventory.get_contents()) do
+                    local insertedCount = player.insert{name = itemName, count = itemCount}
+                    if insertedCount > 0 then
+                        inventory.remove({name = itemName, count = insertedCount})
+                    end
+                end
+                player.print("Retrieved items from a dead body.")
+            end
+        end
+    end
+end
+
+function retriveBodyCommand(command)
+    local player = game.players[command.player_index]   
+    retrivePlayerItemsFromBody(player)
+end
+
+function repairEntitiesNearby()
+end
+
 function add_Commands()
 
     commands.remove_command("teleport")
     commands.add_command("teleport",
-                         "Use /teleport to teleport to main base or /teleport <SurfaceName> to teleport to a surface or /teleport <CustomTagText> to go to a custom tag location",
+                         "Use /teleport to teleport to main base or /teleport <SurfaceName> to teleport to a surface or /teleport <PlayerName> | <CustomTagText> to go to a player or custom tag location",
                          teleportCommand)
+
     commands.remove_command("reviveGhosts")
     commands.add_command("reviveGhosts",
                          "[Command]: Revives ghosts in the area near player using items from player inventory and available chests.",
                          reviveCommand)
+
     commands.remove_command("deconstruct")
     commands.add_command("deconstruct",
                          "[Command]: Destroys items marked for deconstruction and adds to player inventory. ",
                          deconstructCommand)
+
     commands.remove_command("refillEntities")
     commands.add_command("refillEntities",
                          "[Admin Command]: Refills entity from containers to nearby furnaces, burners, labs and other refillable entities.",
                          refillEntitiesCommand)
+
     commands.remove_command("depositIntoChests")
     commands.add_command("depositIntoChests",
                          "[Command]: Revives ghosts in the area near player using items from player inventory and available chests.",
                          depositIntoChestsCommand)
+
     commands.remove_command("removeDecoratives")
     commands.add_command("removeDecoratives",
                          "[Command]: destroys all decoratives from the surface. ",
                          removeDecoratives)
+
     commands.remove_command("waterRing")
     commands.add_command("waterRing",
                          "[Admin Command]:Creates a moot of specified size.",
                          waterRingCommand)
+
     commands.remove_command("protectionRing")
     commands.add_command("protectionRing",
                          "[Admin Command]:Creates a out of map protection ring of specified size.",
                          protectionRingCommand)
+
     commands.remove_command("landFill")
     commands.add_command("landFill", "[Admin Command]: Land fills an area.",
                          landFillCommand)
+
     commands.remove_command("waterFill")
     commands.add_command("waterFill", "[Admin Command]: Water fills an area.",
                          waterFillCommand)
+
+    commands.remove_command("deleteResources")
+    commands.add_command("deleteResources",
+                         "[Admin Command]: Deletes resources in an area.",
+                         deleteResourcesCommand)
+
     commands.remove_command("generateResources")
     commands.add_command("generateResources",
                          "[Admin Command]: Generates resources in an area.",
                          generateResourcesCommand)
+
     commands.remove_command("blackDeath")
     commands.add_command("blackDeath",
                          "[Admin Command]: Kills all enemy entity on explored area.",
                          blackDeathCommand)
+
     commands.remove_command("marcoPolo")
     commands.add_command("marcoPolo", "[Admin Command]: Explores a large area.",
                          marcoPoloCommand)
+
     commands.remove_command("aegis")
     commands.add_command("aegis",
                          "[Admin Command]: Speeds up manual crafting speed (toggles).",
                          aegisCommand)
+
     commands.remove_command("enableAllTech")
     commands.add_command("enableAllTech",
                          "[Admin Command]: Unlocks all technologies.",
                          enableAllTechCommand)
+
     commands.remove_command("changeDiplomacy")
     commands.add_command("changeDiplomacy",
                          "[Admin Command]: Toggles diplomatic stance with enemy.",
                          changeDiplomacyCommand)
+
     commands.remove_command("enableAllRecipes")
     commands.add_command("enableAllRecipes",
                          "[Admin Command]: Emables all recipes.",
                          enableAllRecipesCommand)
-    -- 
-    -- commands.remove_command("mmzPrint")
-    -- commands.add_command("mmzPrint",
-    --                      "[Admin Command]: Prints the MMZ spawn base.",
-    --                      mmzPrintCommand)
+
+    commands.remove_command("equipPlayer")
+    commands.add_command("equipPlayer","[Admin Command]: Gives advanced equipment to a player.", equipPlayerCommand)
+
+    commands.remove_command("pandorasBox")
+    commands.add_command("pandorasBox", "[Admin command]: Give pandoras box to a player.", pandorasBoxCommand)
+
+    commands.remove_command("toggleCheat")
+    commands.add_command("toggleCheat", "[Admin command]: Craft without inventory items.", toggleCheatCommand)
+
+    commands.remove_command("mmzPrint")
+    commands.add_command("mmzPrint", "[Admin Command]: Creates a safe zone with MMZ print.", mmzPrintCommand)
+    
+    commands.remove_command("craftRecipe")
+    commands.add_command("craftRecipe", "[Command]: Crafts specified quantity of a recipe if enough ingredients are available.", craftRecipeCommand)
+
+    -- commands.remove_command("retreiveBody")
+    -- commands.add_command("retreiveBody", "[Command]: Retrieves your items from nearby dead bodies.", retriveBodyCommand)
 end
 
-return mmzfreeplay
+freeplay.on_load = function() add_Commands() end
+
+--  ************************* MMZ Soft Mod section end start *******************************
+return freeplay
