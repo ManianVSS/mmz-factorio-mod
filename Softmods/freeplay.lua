@@ -284,13 +284,9 @@ end
 --  ************************* MMZ Soft Mod section start *******************************
 
 local give_first_player_items = function(player)    
-    player.insert {name = "iron-plate", count = 500}
-    player.insert {name = "copper-plate", count = 300}
-    player.insert {name = "steel-plate", count = 250}
-    player.insert {name = "wood", count = 100}
-    player.insert {name = "electric-mining-drill", count = 1}
-    player.insert {name = "electric-furnace", count = 10}
-    player.insert {name = "small-electric-pole", count = 10}
+    player.insert {name = "burner-mining-drill", count = 60}
+    player.insert {name = "stone-furnace", count = 60}
+    player.insert {name = "coal", count = 1000}
 end
 
 function deepcopy(orig)
@@ -462,6 +458,8 @@ function init_soft_mod(player)
 	-- player.insert{name="firearm-magazine", count=200} 
 
     give_first_player_items(player)
+
+    -- modify_map_gen_setting(10)
 
     player.print("Soft mod initialized")
 
@@ -1023,133 +1021,141 @@ function refillEntitiesCommand(command)
     -- if (command.parameter ~= nil) then searchRadius = command.parameter end
     local searchRadius = 200
 
+    local number_of_refills=1
+    -- Parse number of times to loop refillable entities
+    if (command.parameter ~= nil) then
+        number_of_refills = tonumber(command.parameter)      
+    end
+
     -- Get all inventorys from accessible containers
     inventories = get_accessible_containers(player, searchRadius)
 
     -- Find all refillable items and put fuel into them
-    for refillable_entity_name, refillable_item_map in pairs(
-                                                           refillable_entity_to_items_map) do
-        refillable_entities_found = player.surface.find_entities_filtered {
-            name = refillable_entity_name,
-            position = player.position,
-            radius = searchRadius
-        }
+    for n=1,number_of_refills do
+        for refillable_entity_name, refillable_item_map in pairs(
+                                                            refillable_entity_to_items_map) do
+            refillable_entities_found = player.surface.find_entities_filtered {
+                name = refillable_entity_name,
+                position = player.position,
+                radius = searchRadius
+            }
 
-        for re_i, refillable_entity in pairs(refillable_entities_found) do
-            -- TODO: Need to use different logic for furnace ores
-            for refillable_item_name, refillable_item_stack_data in pairs(
-                                                                        refillable_item_map) do
-                item_type = refillable_item_stack_data["type"]
-                item_count = refillable_item_stack_data["count"]
-                item_max_count = refillable_item_stack_data["max"]
-                refillable_item_stack = {
-                    name = refillable_item_name,
-                    count = item_count
-                }
+            for re_i, refillable_entity in pairs(refillable_entities_found) do
+                -- TODO: Need to use different logic for furnace ores
+                for refillable_item_name, refillable_item_stack_data in pairs(
+                                                                            refillable_item_map) do
+                    item_type = refillable_item_stack_data["type"]
+                    item_count = refillable_item_stack_data["count"]
+                    item_max_count = refillable_item_stack_data["max"]
+                    refillable_item_stack = {
+                        name = refillable_item_name,
+                        count = item_count
+                    }
 
-                if item_type == "furnaceitem" then
-                    recipe_name =
-                        furnace_item_to_recipe_map[refillable_item_name]
-                    prepared_item_count_in_machine =
-                        refillable_entity.get_item_count(recipe_name)
-                    if ((prepared_item_count_in_machine > 0) and
-                        player.can_insert(
-                            {
+                    if item_type == "furnaceitem" then
+                        recipe_name =
+                            furnace_item_to_recipe_map[refillable_item_name]
+                        prepared_item_count_in_machine =
+                            refillable_entity.get_item_count(recipe_name)
+                        if ((prepared_item_count_in_machine > 0) and
+                            player.can_insert(
+                                {
+                                    name = recipe_name,
+                                    count = prepared_item_count_in_machine
+                                })) then
+                            -- log("Going to insert finished products to player " ..
+                            --         recipe_name .. " with count " ..
+                            --         prepared_item_count_in_furnace)
+                            item_count_inserted = player.insert({
                                 name = recipe_name,
                                 count = prepared_item_count_in_machine
-                            })) then
-                        -- log("Going to insert finished products to player " ..
-                        --         recipe_name .. " with count " ..
-                        --         prepared_item_count_in_furnace)
-                        item_count_inserted = player.insert({
-                            name = recipe_name,
-                            count = prepared_item_count_in_machine
-                        })
-                        if item_count_inserted < prepared_item_count_in_machine then
-                            depositPlayerItemsToChest(player)
-                        end
-                        if item_count_inserted > 0 then
-                            refillable_entity.remove_item({
-                                name = recipe_name,
-                                count = item_count_inserted
                             })
-                        end
-                    end
-                    if refillable_entity.previous_recipe and
-                        (refillable_entity.previous_recipe.name == recipe_name) and
-                        refillable_entity.can_insert(refillable_item_stack) and
-                        (refillable_entity.get_item_count(refillable_item_name) <
-                            item_max_count) then
-                        container_with_item =
-                            find_container_with_entity(refillable_item_name,
-                                                       inventories, item_count)
-                        if container_with_item ~= nil then
-                            -- log(
-                            --     "Going to insert furnace recipes to furnace " ..
-                            --         refillable_entity.name .. " with item " ..
-                            --         refillable_item_name)
-                            item_count_inserted =
-                                refillable_entity.insert(refillable_item_stack)
+                            if item_count_inserted < prepared_item_count_in_machine then
+                                depositPlayerItemsToChest(player)
+                            end
                             if item_count_inserted > 0 then
-                                container_with_item.remove_item({
-                                    name = refillable_item_name,
+                                refillable_entity.remove_item({
+                                    name = recipe_name,
                                     count = item_count_inserted
                                 })
                             end
                         end
-                    end
-                else -- if (item_type == "fuel") or (item_type == "ingre") then
-                    -- TODO: 
-                    if refillable_entity.type == "assembling-machine" then
-                        current_recipe = refillable_entity.get_recipe()
-                        if current_recipe ~= null then
-                            recipe_name = current_recipe.name
-
-                            prepared_item_count_in_machine =
-                                refillable_entity.get_item_count(recipe_name)
-                            if ((prepared_item_count_in_machine > 0) and
-                                player.can_insert(
-                                    {
-                                        name = recipe_name,
-                                        count = prepared_item_count_in_machine
-                                    })) then
-                                -- log("Going to insert finished products to player " ..
-                                --         recipe_name .. " with count " ..
-                                --         prepared_item_count_in_furnace)
-                                item_count_inserted = player.insert({
-                                    name = recipe_name,
-                                    count = prepared_item_count_in_machine
-                                })
-                                if item_count_inserted <
-                                    prepared_item_count_in_machine then
-                                    depositPlayerItemsToChest(player)
-                                end
+                        if refillable_entity.previous_recipe and
+                            (refillable_entity.previous_recipe.name == recipe_name) and
+                            refillable_entity.can_insert(refillable_item_stack) and
+                            (refillable_entity.get_item_count(refillable_item_name) <
+                                item_max_count) then
+                            container_with_item =
+                                find_container_with_entity(refillable_item_name,
+                                                        inventories, item_count)
+                            if container_with_item ~= nil then
+                                -- log(
+                                --     "Going to insert furnace recipes to furnace " ..
+                                --         refillable_entity.name .. " with item " ..
+                                --         refillable_item_name)
+                                item_count_inserted =
+                                    refillable_entity.insert(refillable_item_stack)
                                 if item_count_inserted > 0 then
-                                    refillable_entity.remove_item({
-                                        name = recipe_name,
+                                    container_with_item.remove_item({
+                                        name = refillable_item_name,
                                         count = item_count_inserted
                                     })
                                 end
                             end
                         end
-                    end
-                    if refillable_entity.can_insert(refillable_item_stack) and
-                        (refillable_entity.get_item_count(refillable_item_name) <
-                            item_max_count) then
-                        container_with_item =
-                            find_container_with_entity(refillable_item_name,
-                                                       inventories, item_count)
-                        if container_with_item ~= nil then
-                            -- log("Going to insert recipes to entity " ..
-                            --         refillable_entity.name .. " with item " ..
-                            --         refillable_item_name)
-                            item_count_inserted =
-                                refillable_entity.insert(refillable_item_stack)
-                            if item_count_inserted > 0 then
-                                container_with_item.remove_item({
-                                    name = refillable_item_name,
-                                    count = item_count_inserted
-                                })
+                    else -- if (item_type == "fuel") or (item_type == "ingre") then
+                        -- TODO: 
+                        if refillable_entity.type == "assembling-machine" then
+                            current_recipe = refillable_entity.get_recipe()
+                            if current_recipe ~= null then
+                                recipe_name = current_recipe.name
+
+                                prepared_item_count_in_machine =
+                                    refillable_entity.get_item_count(recipe_name)
+                                if ((prepared_item_count_in_machine > 0) and
+                                    player.can_insert(
+                                        {
+                                            name = recipe_name,
+                                            count = prepared_item_count_in_machine
+                                        })) then
+                                    -- log("Going to insert finished products to player " ..
+                                    --         recipe_name .. " with count " ..
+                                    --         prepared_item_count_in_furnace)
+                                    item_count_inserted = player.insert({
+                                        name = recipe_name,
+                                        count = prepared_item_count_in_machine
+                                    })
+                                    if item_count_inserted <
+                                        prepared_item_count_in_machine then
+                                        depositPlayerItemsToChest(player)
+                                    end
+                                    if item_count_inserted > 0 then
+                                        refillable_entity.remove_item({
+                                            name = recipe_name,
+                                            count = item_count_inserted
+                                        })
+                                    end
+                                end
+                            end
+                        end
+                        if refillable_entity.can_insert(refillable_item_stack) and
+                            (refillable_entity.get_item_count(refillable_item_name) <
+                                item_max_count) then
+                            container_with_item =
+                                find_container_with_entity(refillable_item_name,
+                                                        inventories, item_count)
+                            if container_with_item ~= nil then
+                                -- log("Going to insert recipes to entity " ..
+                                --         refillable_entity.name .. " with item " ..
+                                --         refillable_item_name)
+                                item_count_inserted =
+                                    refillable_entity.insert(refillable_item_stack)
+                                if item_count_inserted > 0 then
+                                    container_with_item.remove_item({
+                                        name = refillable_item_name,
+                                        count = item_count_inserted
+                                    })
+                                end
                             end
                         end
                     end
@@ -1775,6 +1781,52 @@ end
 function repairEntitiesNearby()
 end
 
+function printMapGenSettingsCommand(command)
+    local player = game.players[command.player_index]   
+    local map_gen_settings = player.surface.map_gen_settings
+    
+    player.print(serpent.block(map_gen_settings.autoplace_controls))
+end
+
+-- Set all ore generation settings to 10 times to current values
+function modify_map_gen_setting(multiplier)
+    if game == nil then return end
+
+    if multiplier == nil then
+        multiplier = 10
+    end
+
+    local map_gen_settings = game.surfaces["nauvis"].map_gen_settings
+    
+    -- If ore name contains -ore suffix, increase its settings
+    for ore_name, ore_settings in pairs(map_gen_settings.autoplace_controls) do
+        if string.find(ore_name, "-ore") then
+            if ore_settings.frequency ~= nil and ore_settings.size ~= nil and
+                ore_settings.richness ~= nil then
+                -- ore_settings.frequency = ore_settings.frequency * 10
+                ore_settings.size = ore_settings.size * multiplier
+                -- ore_settings.richness = ore_settings.richness * 10
+            end
+        end
+    end
+
+    game.surfaces["nauvis"].map_gen_settings = map_gen_settings
+end
+
+function increaseOreGenerationCommand(command)
+    local player = game.players[command.player_index]   
+    local multiplier = tonumber(command.parameter)
+    if multiplier == nil then
+        multiplier = 10
+    end
+    modify_map_gen_setting(multiplier)
+end
+
+function removePolloutionCommand(command)
+    local player = game.players[command.player_index]   
+    player.surface.clear_pollution()
+end
+
 function add_Commands()
 
     commands.remove_command("teleport")
@@ -1794,7 +1846,7 @@ function add_Commands()
 
     commands.remove_command("refillEntities")
     commands.add_command("refillEntities",
-                         "[Admin Command]: Refills entity from containers to nearby furnaces, burners, labs and other refillable entities.",
+                         "[Admin Command]: Refills entity from containers to nearby furnaces, burners, labs and other refillable entities. Ussage: /refillEntities [radius] [number_of_refills]",
                          refillEntitiesCommand)
 
     commands.remove_command("depositIntoChests")
@@ -1881,9 +1933,23 @@ function add_Commands()
 
     -- commands.remove_command("retreiveBody")
     -- commands.add_command("retreiveBody", "[Command]: Retrieves your items from nearby dead bodies.", retriveBodyCommand)
+
+    commands.remove_command("printMapGenSettings")
+    commands.add_command("printMapGenSettings", "[Admin Command]: Prints current map generation settings.", printMapGenSettingsCommand)
+
+    commands.remove_command("increaseOreGeneration")
+    commands.add_command("increaseOreGeneration", "[Admin Command]: Increases ore generation settings by a multiplier (default 10). Usage: /increaseOreGeneration [multiplier]", increaseOreGenerationCommand)
+
+    commands.remove_command("removePolloution")
+    commands.add_command("removePolloution", "[Admin Command]: Removes all pollution from the surface.", removePolloutionCommand)
 end
 
-freeplay.on_load = function() add_Commands() end
+
+
+
+freeplay.on_load = function()    
+    add_Commands() 
+end
 
 --  ************************* MMZ Soft Mod section end start *******************************
 return freeplay
