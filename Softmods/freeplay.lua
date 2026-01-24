@@ -531,20 +531,32 @@ function printBaseLayout(player, tileToFillWith)
     end
 
     -- Solar Panels
+    -- if entity solar-panel-mmz is available set entity_name to that else keep as solar-panel
+    local entity_name = "solar-panel"
+    if game.entity_prototypes["solar-panel-mmz"] then
+        entity_name = "solar-panel-mmz"
+    end
+    
     for i = 1, 33 do
          for j = 0, 5 do
-            createInitialEntity(player, "solar-panel", player.position.x + 22 + j, player.position.y - 19 + i )
-            createInitialEntity(player, "solar-panel", player.position.x - 23 - j, player.position.y - 19 + i )
-            createInitialEntity(player, "solar-panel", player.position.x - 19 + i, player.position.y - 23 - j )
-            createInitialEntity(player, "solar-panel", player.position.x - 19 + i, player.position.y + 22 + j )
+            createInitialEntity(player, entity_name, player.position.x + 22 + j, player.position.y - 19 + i )
+            createInitialEntity(player, entity_name, player.position.x - 23 - j, player.position.y - 19 + i )
+            createInitialEntity(player, entity_name, player.position.x - 19 + i, player.position.y - 23 - j )
+            createInitialEntity(player, entity_name, player.position.x - 19 + i, player.position.y + 22 + j )
         end
     end
 
     -- Accumulators
+    -- if entity accumulator-mmz is available set entity_name to that else keep as accumulator
+    local entity_name = "accumulator"
+    if game.entity_prototypes["accumulator-mmz"] then
+        entity_name = "accumulator-mmz"
+    end
+
     for i = 0, 24 do
         for j = 0, 8 do
-            createInitialEntity(player, "accumulator", player.position.x - 12 + i, player.position.y + 10 + j )
-            createInitialEntity(player, "accumulator", player.position.x - 12 + i, player.position.y - 10 - j )
+            createInitialEntity(player, entity_name, player.position.x - 12 + i, player.position.y + 10 + j )
+            createInitialEntity(player, entity_name, player.position.x - 12 + i, player.position.y - 10 - j )
             -- initial_accumulator.energy = 10000
         end
     end
