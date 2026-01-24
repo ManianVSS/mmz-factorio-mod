@@ -533,7 +533,8 @@ function printBaseLayout(player, tileToFillWith)
     -- Solar Panels
     -- if entity solar-panel-mmz is available set entity_name to that else keep as solar-panel
     local entity_name = "solar-panel"
-    if game.entity_prototypes["solar-panel-mmz"] then
+    -- If solar-panel-mmz recipe exits
+    if player.force.recipes["solar-panel-mmz"].enabled then
         entity_name = "solar-panel-mmz"
     end
     
@@ -549,8 +550,8 @@ function printBaseLayout(player, tileToFillWith)
     -- Accumulators
     -- if entity accumulator-mmz is available set entity_name to that else keep as accumulator
     local entity_name = "accumulator"
-    if game.entity_prototypes["accumulator-mmz"] then
-        entity_name = "accumulator-mmz"
+    if player.force.recipes["accumulator-mmz"].enabled then
+        entity_name = "accumulator-mmz"   
     end
 
     for i = 0, 24 do
