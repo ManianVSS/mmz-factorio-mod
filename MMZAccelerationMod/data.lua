@@ -20,6 +20,15 @@ data.raw["character"]["character"].running_speed = 0.6
 data.raw["character"]["character"].mining_speed = 10000
 data.raw["character"]["character"].crafting_speed = 1000
 
+
+-- Modify the stack size of all items to be 100 times larger
+for _, item in pairs(data.raw["item"]) do
+    if item.stack_size ~= nil and item.stack_size > 1 then
+        item.stack_size = item.stack_size * 100
+    end
+end
+
+
 -- Enable recipes
 
 data.raw["recipe"]["loader"].hidden = false
@@ -63,36 +72,36 @@ data.raw["lab"]["lab"].researching_speed =
 
 
 -- chest modifications
-local chest_entities={"wooden-chest","iron-chest","steel-chest"}
-for _, chest_name in pairs(chest_entities) do
-    data.raw["container"][chest_name].inventory_size =
-        data.raw["container"][chest_name].inventory_size * 10
-end
+-- local chest_entities={"wooden-chest","iron-chest","steel-chest"}
+-- for _, chest_name in pairs(chest_entities) do
+--     data.raw["container"][chest_name].inventory_size =
+--         data.raw["container"][chest_name].inventory_size * 10
+-- end
 
 
 -- Fuel inventory modifications
 -- Increase fuel inventory of burner-inserter by 10 times
-data.raw["inserter"]["burner-inserter"].energy_source.fuel_inventory_size =
-    data.raw["inserter"]["burner-inserter"].energy_source.fuel_inventory_size * 10
--- Increase fuel inventory of boiler by 10 times
-data.raw["boiler"]["boiler"].energy_source.fuel_inventory_size =
-    data.raw["boiler"]["boiler"].energy_source.fuel_inventory_size * 10
--- Increase fuel inventory of locomotive by 10 times
-data.raw["locomotive"]["locomotive"].energy_source.fuel_inventory_size =
-    data.raw["locomotive"]["locomotive"].energy_source.fuel_inventory_size * 10
--- Increase fuel inventory of burner mining drill by 10 times
-data.raw["mining-drill"]["burner-mining-drill"].energy_source.fuel_inventory_size =
-    data.raw["mining-drill"]["burner-mining-drill"].energy_source.fuel_inventory_size *
-    10
--- Increase fuel inventory of stone-furnace by 10 times
-data.raw["furnace"]["stone-furnace"].energy_source.fuel_inventory_size =
-    data.raw["furnace"]["stone-furnace"].energy_source.fuel_inventory_size * 10
--- Increase fuel inventory of steel-furnace by 10 times
-data.raw["furnace"]["steel-furnace"].energy_source.fuel_inventory_size =
-    data.raw["furnace"]["steel-furnace"].energy_source.fuel_inventory_size * 10
--- Increase fuel inventory of car by 10 times
-data.raw["car"]["car"].energy_source.fuel_inventory_size =
-    data.raw["car"]["car"].energy_source.fuel_inventory_size * 10
+-- data.raw["inserter"]["burner-inserter"].energy_source.fuel_inventory_size =
+--     data.raw["inserter"]["burner-inserter"].energy_source.fuel_inventory_size * 10
+-- -- Increase fuel inventory of boiler by 10 times
+-- data.raw["boiler"]["boiler"].energy_source.fuel_inventory_size =
+--     data.raw["boiler"]["boiler"].energy_source.fuel_inventory_size * 10
+-- -- Increase fuel inventory of locomotive by 10 times
+-- data.raw["locomotive"]["locomotive"].energy_source.fuel_inventory_size =
+--     data.raw["locomotive"]["locomotive"].energy_source.fuel_inventory_size * 10
+-- -- Increase fuel inventory of burner mining drill by 10 times
+-- data.raw["mining-drill"]["burner-mining-drill"].energy_source.fuel_inventory_size =
+--     data.raw["mining-drill"]["burner-mining-drill"].energy_source.fuel_inventory_size *
+--     10
+-- -- Increase fuel inventory of stone-furnace by 10 times
+-- data.raw["furnace"]["stone-furnace"].energy_source.fuel_inventory_size =
+--     data.raw["furnace"]["stone-furnace"].energy_source.fuel_inventory_size * 10
+-- -- Increase fuel inventory of steel-furnace by 10 times
+-- data.raw["furnace"]["steel-furnace"].energy_source.fuel_inventory_size =
+--     data.raw["furnace"]["steel-furnace"].energy_source.fuel_inventory_size * 10
+-- -- Increase fuel inventory of car by 10 times
+-- data.raw["car"]["car"].energy_source.fuel_inventory_size =
+--     data.raw["car"]["car"].energy_source.fuel_inventory_size * 10
 
 
 -- Mining drill modifications
@@ -130,10 +139,10 @@ for _, drill_name in pairs(mining_drill_entities) do
                                                    base_drill.energy_usage,
                                                    "%d+")) * 15) .. "kW"
     -- If energy_source has fuel_inventory_size, increase it by 15 times
-    if new_drill.energy_source.fuel_inventory_size ~= nil then
-        new_drill.energy_source.fuel_inventory_size =
-            base_drill.energy_source.fuel_inventory_size * 15
-    end
+    -- if new_drill.energy_source.fuel_inventory_size ~= nil then
+    --     new_drill.energy_source.fuel_inventory_size =
+    --         base_drill.energy_source.fuel_inventory_size * 15
+    -- end
 
     -- Increase pollution by 15 times if applicable
     if new_drill.energy_source.emissions_per_minute["pollution"] ~= nil then
@@ -177,6 +186,14 @@ for _, furnace_name in pairs(furnace_entities) do
     end
 end
 
+-- Change electric furance recipe from replace advanced circuit to green circuit and enable it
+data.raw["recipe"]["electric-furnace"].ingredients = {
+    {type = "item", name = "steel-furnace", amount = 1},
+    {type = "item", name = "electronic-circuit", amount = 5},
+    {type = "item", name = "copper-plate", amount = 10}
+}
+data.raw["recipe"]["electric-furnace"].enabled = true
+
 -- Create new furnace entities with increased crafting speed and energy usage
 for _, furnace_name in pairs(furnace_entities) do
     local base_furnace = data.raw["furnace"][furnace_name]
@@ -189,10 +206,10 @@ for _, furnace_name in pairs(furnace_entities) do
                                                      "%d+")) * 24) .. "kW"
 
     -- If energy_source has fuel_inventory_size, increase it by 24 times   
-    if new_furnace.energy_source.fuel_inventory_size ~= nil then
-        new_furnace.energy_source.fuel_inventory_size =
-            base_furnace.energy_source.fuel_inventory_size * 24
-    end
+    -- if new_furnace.energy_source.fuel_inventory_size ~= nil then
+    --     new_furnace.energy_source.fuel_inventory_size =
+    --         base_furnace.energy_source.fuel_inventory_size * 24
+    -- end
 
     -- Increase pollution by 24 times if applicable
     if new_furnace.energy_source.emissions_per_minute["pollution"] ~= nil then
@@ -236,13 +253,17 @@ assembling_machine_entities = {
     "oil-refinery", "chemical-plant", "centrifuge"
 }
 
--- Remove pollution for all assembling machine entities
+-- Remove pollution for all assembling machine entities and allow them to smelt and craft all recipes
 for _, machine_name in pairs(assembling_machine_entities) do
     if data.raw["assembling-machine"][machine_name].energy_source.emissions_per_minute[
         "pollution"] ~= nil then
         data.raw["assembling-machine"][machine_name].energy_source.emissions_per_minute[
             "pollution"] = 0
     end
+    data.raw["assembling-machine"][machine_name].crafting_categories = {
+        "crafting", "basic-crafting", "advanced-crafting", "smelting",
+        "centrifuging"
+    }
 end
 
 -- Create new assembling machine entities with increased crafting speed and energy usage
@@ -383,12 +404,40 @@ data.raw["fluid-wagon"]["fluid-wagon"].braking_force =
 data.raw["artillery-wagon"]["artillery-wagon"].braking_force =
     data.raw["artillery-wagon"]["artillery-wagon"].braking_force * 3
 
--- Increae the inventory size of cargo-wagon by 10 times
-data.raw["cargo-wagon"]["cargo-wagon"].inventory_size =
-    data.raw["cargo-wagon"]["cargo-wagon"].inventory_size * 10
--- Increae the inventory of fluid-wagon by 10 times
-data.raw["fluid-wagon"]["fluid-wagon"].capacity =
-    data.raw["fluid-wagon"]["fluid-wagon"].capacity * 10
--- Increae the inventory of artillery-wagon by 10 times
-data.raw["artillery-wagon"]["artillery-wagon"].inventory_size =
-    data.raw["artillery-wagon"]["artillery-wagon"].inventory_size * 10
+-- -- Increase the inventory size of cargo-wagon by 10 times
+-- data.raw["cargo-wagon"]["cargo-wagon"].inventory_size =
+--     data.raw["cargo-wagon"]["cargo-wagon"].inventory_size * 10
+-- -- Increase the inventory of fluid-wagon by 10 times
+-- data.raw["fluid-wagon"]["fluid-wagon"].capacity =
+--     data.raw["fluid-wagon"]["fluid-wagon"].capacity * 10
+-- -- Increase the inventory of artillery-wagon by 10 times
+-- data.raw["artillery-wagon"]["artillery-wagon"].inventory_size =
+--     data.raw["artillery-wagon"]["artillery-wagon"].inventory_size * 10
+
+-- Enable recipe submachine-gun
+data.raw["recipe"]["submachine-gun"].enabled = true
+
+-- Create a sub-machine-gun-mmz which is 100 times more faster and has 100x range than the base sub-machine-gun
+local base_sub_machine_gun = data.raw["gun"]["submachine-gun"]
+local new_sub_machine_gun = table.deepcopy(base_sub_machine_gun)
+new_sub_machine_gun.name = "submachine-gun-mmz"
+-- new_sub_machine_gun.minable.result = "submachine-gun-mmz"
+-- new_sub_machine_gun.attack_parameters.ammo_type.action.action_delivery.target_effects[1].damage.amount =
+--     base_sub_machine_gun.attack_parameters.ammo_type.action.action_delivery.target_effects[1].damage.amount * 100
+new_sub_machine_gun.attack_parameters.cooldown =
+    math.floor(base_sub_machine_gun.attack_parameters.cooldown / 100)
+new_sub_machine_gun.attack_parameters.range =
+    base_sub_machine_gun.attack_parameters.range * 100
+data:extend({new_sub_machine_gun})
+-- Create new recipe for the modded sub-machine-gun but the recipe ingredients is same as
+local base_recipe = data.raw["recipe"]["submachine-gun"]
+local new_recipe = table.deepcopy(base_recipe)
+new_recipe.name = "submachine-gun-mmz"
+new_recipe.enabled = true
+new_recipe.ingredients = base_recipe.ingredients
+new_recipe.results[1]["name"] = "submachine-gun-mmz"
+-- Set the recipe ingredient to be 100 times the base item
+new_recipe.ingredients = {
+    {type = "item", name = "submachine-gun", amount = 100}
+}
+data:extend({new_recipe})

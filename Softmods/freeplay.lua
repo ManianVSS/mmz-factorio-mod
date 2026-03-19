@@ -468,15 +468,22 @@ end
 
 -- Need to optimize the function instead of too much copy paste
 function equipPlayer(player)
+    -- If player has an armor equipped, intimate the player to unequip the armor first and return
+    if player.get_inventory(5)[1].valid_for_read then
+        player.print("Please unequip your armor first before using this command.")
+        return
+    end
+
     player.insert {name = "power-armor-mk2", count = 1}
     local p_armor = player.get_inventory(5)[1].grid
+    
     for i = 1, 4 do p_armor.put({name = "fission-reactor-equipment"}) end
     for i = 1, 6 do p_armor.put({name = "personal-laser-defense-equipment"}) end
     p_armor.put({name = "night-vision-equipment"})
     for i = 1, 6 do p_armor.put({name = "battery-mk2-equipment"}) end
 
-    player.insert {name = "submachine-gun", count = 1}
-    player.insert {name = "uranium-rounds-magazine", count = 1000}
+    player.insert {name = "submachine-gun-mmz", count = 1}
+    player.insert {name = "uranium-rounds-magazine", count = 5000}
 end
 
 function pandorasBox(player)
@@ -516,6 +523,9 @@ function printBaseLayout(player, tileToFillWith)
     landFillArea(player, 8, 8, 0, 0, "dirt-7")
     tileRing(player, 65, 1, "water", 10)
     generateResources(player, 500, 16, base_size)
+
+    -- Set player spawn position to the current poition of the player
+    storage["_spawn_position"] = {player.position.x, player.position.y}
 
     player.teleport {player.position.x - base_size -30, player.position.y - base_size -30}
     waterFillArea(player, 30, 30, base_size+ 30, base_size+30)
@@ -624,6 +634,17 @@ function printBaseLayout(player, tileToFillWith)
      mmzPrint(player, "dirt-7")
 end
 
+function printBaseLayoutCommand(command)
+    local player = game.players[command.player_index]
+    if (player.admin == true) then
+        printBaseLayout(player)
+    else
+        player.print(
+            "You don't have administrative access required for this command")
+    end
+end
+
+
 function tileRing(player, size, thichness, tileToFillWith, gap)
     -- waterFillArea(player,size,thichness,0,-size/2)
     -- waterFillArea(player,thichness,size,-size/2,0)
@@ -728,8 +749,15 @@ function get_accessible_containers(player, radius)
         position = player.position,
         radius = radius
     }
-    inventories = {player, table.unpack(storage["initial_chests"])}
-    for i = 1, #nearby_entities do
+
+    -- Include initial chests in the list of accessible containers
+    if (storage["initial_chests"] == nil or #storage["initial_chests"] == 0) then
+        inventories = {player}
+    else
+        inventories = {player, table.unpack(storage["initial_chests"])}
+    end
+
+        for i = 1, #nearby_entities do
         if (nearby_entities[i].name == "wooden-chest") or
             (nearby_entities[i].name == "iron-chest") or
             (nearby_entities[i].name == "steel-chest") or
@@ -1199,6 +1227,10 @@ function depositPlayerItemsToChest(player)
         for i, item_name in pairs(depositable_items_list) do
             item_count = player.get_item_count(item_name)
             if item_count > 0 then
+                -- If initial chests don't exits or is empty, then break
+                if (storage["initial_chests"] == nil or #storage["initial_chests"] == 0) then
+                    break
+                end      
                 for ci, initial_chest in pairs(storage["initial_chests"]) do
                     if initial_chest.can_insert({
                         name = item_name,
@@ -1232,13 +1264,49 @@ function depositIntoChestsCommand(command)
     depositPlayerItemsToChest(player)
 end
 
+function randomizeSpawnCommand(command)
+    local player = game.players[command.player_index]
+    if (player.admin == true) then
+        local spawn_position = {
+            x = math.random(-1000000, 1000000),
+            y = math.random(-1000000, 1000000)
+        }
+        player.teleport(spawn_position)
+        storage["_spawn_position"] = spawn_position
+        game.print(player.name ..
+                       " has teleported to a random location far from the center and set it as the new spawn point")
+    else
+        player.print(
+            "You don't have administrative access required for this command")
+    end
+end
+
+
 function teleportCommand(command)
     local player = game.players[command.player_index]   
 
     if (command.parameter == nil) then
+        -- If storage["_spawn_position"] is not set, set it to {0,0}
+        if (storage["_spawn_position"] == nil) then
+            storage["_spawn_position"] = {0, 0}
+        end
         player.teleport(storage["_spawn_position"])
         game.print(player.name .. " has teleported to the their main spawn area")
-    else -- (command.parameter ~= nil) then
+    -- If parameters is enclosed in {}, try to parse it as coordinates and teleport player there
+    elseif string.match(command.parameter, "^%s*{[^}]+}%s*$") then
+        local coords = string.match(command.parameter, "{%s*([^}]+)%s*}")
+        local x, y = string.match(coords, "([^,]+),%s*([^,]+)")
+        x = tonumber(x)
+        y = tonumber(y)
+        if x ~= nil and y ~= nil then
+            player.teleport {x, y}
+            player.print("You teleported to coordinates {" .. x .. "," .. y .. "}")
+            return
+        else
+            player.print("Invalid coordinates format. Please use {x,y}.")
+            return
+        end
+        else -- (command.parameter ~= nil) then
         local paramPlayer = getPlayerByName(command.parameter)
 
         if  (paramPlayer ~= null) then
@@ -1269,6 +1337,7 @@ function teleportCommand(command)
         end
     end
 end
+
 
 function waterRingCommand(command)
 
@@ -1840,6 +1909,30 @@ function removePolloutionCommand(command)
     player.surface.clear_pollution()
 end
 
+function repairEntitiesCommand(command)
+    local player = game.players[command.player_index]   
+    local surface = player.surface
+    local center = player.position
+    local radius = 250
+
+    local entities = surface.find_entities_filtered{
+        area = {
+            {center.x - radius, center.y - radius},
+            {center.x + radius, center.y + radius}
+        },
+        force = player.force
+        --,type = {"assembling-machine", "furnace", "lab", "mining-drill", "boiler", "offshore-pump"}
+    }
+
+    for _, entity in pairs(entities) do
+        if entity.valid and entity.health < entity.prototype.max_health then
+            entity.health = entity.prototype.max_health
+        end
+    end
+
+    player.print("Repaired nearby entities.")
+end
+
 function add_Commands()
 
     commands.remove_command("teleport")
@@ -1955,6 +2048,15 @@ function add_Commands()
 
     commands.remove_command("removePolloution")
     commands.add_command("removePolloution", "[Admin Command]: Removes all pollution from the surface.", removePolloutionCommand)
+
+    commands.remove_command("printBaseLayout")
+    commands.add_command("printBaseLayout", "[Admin Command]: Prints the layout of the base.", printBaseLayoutCommand)
+    
+    commands.remove_command("repairEntities")
+    commands.add_command("repairEntities", "[Admin Command]: Repairs nearby entities.", repairEntitiesCommand)
+
+    commands.remove_command("randomizeSpawn")
+    commands.add_command("randomizeSpawn", "[Admin Command]: Randomizes the spawn point.", randomizeSpawnCommand)
 end
 
 

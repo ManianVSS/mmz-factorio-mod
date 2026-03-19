@@ -1,9 +1,9 @@
 {
     "name": "MMZAccelerationMod",
-    "version": "2.0.0",
+    "version": "2.0.3",
     "title": "MMZ Accelerated Mod",
     "author": "MasterManiaZ",
-    "description": "Accelerates (3x) multi aspects of the game to reach end game sooner and have fun.\n\t. 3x speed, energy and pollution increase for production  buildings, miners, logistics, robotics, labs.\n\t. 3x Electricity production and pollution increased.\n\t. Loaders Enabled, Hand smelting and crafting enabled for all items.\n\t. Quality of Life  enhancements :  Zero collision box, 3x run speed, Higher reach.\n\t. Customized Free-play scenario available with commands for more accelerated play.",
+    "description": "`MMZAccelerationMod` is a Factorio mod focused on accelerated progression and quality-of-life improvements. It enables key early game recipes, increases movement and production speeds, expands inventory and reach, and adds new custom `-mmz` entities for high-performance gameplay.",
     "homepage": "https://mods.factorio.com/mod/MMZAccelerationMod",
     "factorio_version": "2.0"
 }
