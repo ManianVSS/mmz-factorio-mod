@@ -249,10 +249,11 @@ end
 
 -- Assembling machine modifications
 assembling_machine_entities = {
-    "assembling-machine-1", "assembling-machine-2", "assembling-machine-3",    
+    "assembling-machine-1", "assembling-machine-2", "assembling-machine-3",
 }
 
-additional_crafting_entities={
+all_crafting_entities={
+    "assembling-machine-1", "assembling-machine-2", "assembling-machine-3",
     "oil-refinery", "chemical-plant", "centrifuge"
 }
 
@@ -265,7 +266,7 @@ for _, machine_name in pairs(assembling_machine_entities) do
 end
 
 --Remove pollution for all assembling machine entities and additional crafting entities
-for _, machine_name in pairs({unpack(assembling_machine_entities), unpack(additional_crafting_entities)}) do
+for _, machine_name in pairs(all_crafting_entities) do
     if data.raw["assembling-machine"][machine_name].energy_source.emissions_per_minute[
         "pollution"] ~= nil then
         data.raw["assembling-machine"][machine_name].energy_source.emissions_per_minute[
@@ -275,7 +276,7 @@ end
 
 
 -- Create new assembling machine and crafting entities with increased crafting speed and energy usage
-for _, machine_name in pairs({unpack(assembling_machine_entities), unpack(additional_crafting_entities)}) do
+for _, machine_name in pairs(all_crafting_entities) do
     local base_machine = data.raw["assembling-machine"][machine_name]
     local new_machine = table.deepcopy(base_machine)
     new_machine.name = machine_name .. "-mmz"
