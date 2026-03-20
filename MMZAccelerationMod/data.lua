@@ -249,25 +249,33 @@ end
 
 -- Assembling machine modifications
 assembling_machine_entities = {
-    "assembling-machine-1", "assembling-machine-2", "assembling-machine-3",
+    "assembling-machine-1", "assembling-machine-2", "assembling-machine-3",    
+}
+
+additional_crafting_entities={
     "oil-refinery", "chemical-plant", "centrifuge"
 }
 
--- Remove pollution for all assembling machine entities and allow them to smelt and craft all recipes
-for _, machine_name in pairs(assembling_machine_entities) do
-    if data.raw["assembling-machine"][machine_name].energy_source.emissions_per_minute[
-        "pollution"] ~= nil then
-        data.raw["assembling-machine"][machine_name].energy_source.emissions_per_minute[
-            "pollution"] = 0
-    end
+-- Allow assembling machines them to smelt and craft all recipes
+for _, machine_name in pairs(assembling_machine_entities) do    
     data.raw["assembling-machine"][machine_name].crafting_categories = {
         "crafting", "basic-crafting", "advanced-crafting", "smelting",
         "centrifuging"
     }
 end
 
--- Create new assembling machine entities with increased crafting speed and energy usage
-for _, machine_name in pairs(assembling_machine_entities) do
+--Remove pollution for all assembling machine entities and additional crafting entities
+for _, machine_name in pairs({unpack(assembling_machine_entities), unpack(additional_crafting_entities)}) do
+    if data.raw["assembling-machine"][machine_name].energy_source.emissions_per_minute[
+        "pollution"] ~= nil then
+        data.raw["assembling-machine"][machine_name].energy_source.emissions_per_minute[
+            "pollution"] = 0
+    end
+end
+
+
+-- Create new assembling machine and crafting entities with increased crafting speed and energy usage
+for _, machine_name in pairs({unpack(assembling_machine_entities), unpack(additional_crafting_entities)}) do
     local base_machine = data.raw["assembling-machine"][machine_name]
     local new_machine = table.deepcopy(base_machine)
     new_machine.name = machine_name .. "-mmz"

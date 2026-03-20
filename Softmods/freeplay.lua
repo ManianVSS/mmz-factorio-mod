@@ -1774,10 +1774,10 @@ function craftRecipe(player, recipe_name, quantity)
         return false
     end
 
-    -- Attempt to craft the recipe
-    crafted=player.begin_crafting{count = quantity, recipe = recipe_name}
+    -- -- Attempt to craft the recipe
+    -- crafted=player.begin_crafting{count = quantity, recipe = recipe_name}
 
-    if crafted == 0 then
+    -- if crafted == 0 then
         -- Try crafting the recipe manually
         local success = craftItem(player, recipe_name, quantity)
         if not success then
@@ -1796,10 +1796,10 @@ function craftRecipe(player, recipe_name, quantity)
             player.print(quantity .. " of " .. recipe_name .. " has been crafted directly.")
             return true
         end
-    else
-        player.print(quantity .. " of " .. recipe_name .. " is set to be crafted.")
-        return true
-    end
+    -- else
+    --     player.print(quantity .. " of " .. recipe_name .. " is set to be crafted.")
+    --     return true
+    -- end
 end
 
 function craftRecipeCommand(event)

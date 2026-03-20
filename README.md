@@ -81,8 +81,11 @@ Registered with `commands.add_command` in `control.lua`:
 ## Notes
 - Some operations in the Lua code may be incomplete or are intentionally commented out for example behavior (e.g., mining drills pollution changes, full entity scaling) — but you can still use the commands and revised recipes from this mod.
 
-## Changes 2.0.3
+## Changes 2.0.4
 - Fixed equip player command if player already has armor
 - Added teleporting to a location by specifying position
 - Added new command repairEntities
 - Added new command ranrandomizeSpawn.
+
+## Changes 2.0.4
+- Fixed bug on Oil refininery recipes reported by [Gerhardl](https://mods.factorio.com/mod/MMZAccelerationMod/discussion/69bd198624c340ede4a929ac)
