@@ -62,13 +62,63 @@ data.raw["recipe"]["solar-panel"].enabled = true
 
 
 -- Lab modifications
-data.raw["lab"]["lab"].energy_usage = tostring(
-                                          tonumber(string.match(
-                                                       data.raw["lab"]["lab"]
-                                                           .energy_usage, "%d+")) *
-                                              10) .. "kW"
-data.raw["lab"]["lab"].researching_speed =
-    data.raw["lab"]["lab"].researching_speed * 10
+-- data.raw["lab"]["lab"].energy_usage = tostring(
+--                                           tonumber(string.match(
+--                                                        data.raw["lab"]["lab"]
+--                                                            .energy_usage, "%d+")) *
+--                                               10) .. "kW"
+-- data.raw["lab"]["lab"].researching_speed =
+--     data.raw["lab"]["lab"].researching_speed * 10
+
+
+-- Create new mmz lab which is 10 times faster and has 10 times energy usage than the base lab
+local base_lab = data.raw["lab"]["lab"]
+local new_lab = table.deepcopy(base_lab)
+new_lab.name = "lab-mmz"
+new_lab.minable.result = "lab-mmz"
+new_lab.energy_usage = tostring(tonumber(string.match(
+                                         base_lab.energy_usage, "%d+")) * 10) .. "kW"
+new_lab.researching_speed = base_lab.researching_speed * 10
+data:extend({new_lab})
+-- Also create new item for the modded lab
+local base_item = data.raw["item"]["lab"]
+local new_item = table.deepcopy(base_item)
+new_item.name = "lab-mmz"
+new_item.place_result = "lab-mmz"
+data:extend({new_item})
+-- Recipe for lab-mmz is 10 normal labs
+local base_recipe = data.raw["recipe"]["lab"]
+local new_recipe = table.deepcopy(base_recipe)
+new_recipe.name = "lab-mmz"
+new_recipe.enabled = true
+new_recipe.ingredients = {
+    {type = "item", name = "lab", amount = 10}
+}
+new_recipe.results[1]["name"] = "lab-mmz"
+data:extend({new_recipe})
+
+-- Create a lab mmz-2 which is 10 times faster than lab-mmz  and 10 times the energy usage of lab-mmz
+local new_lab_2 = table.deepcopy(new_lab)
+new_lab_2.name = "lab-mmz-2"
+new_lab_2.minable.result = "lab-mmz-2"
+new_lab_2.energy_usage = tostring(tonumber(string.match(
+                                           new_lab.energy_usage, "%d+")) * 10) .. "kW"
+new_lab_2.researching_speed = new_lab.researching_speed * 10
+data:extend({new_lab_2})
+-- Also create new item for the modded lab-mmz-2
+local new_item_2 = table.deepcopy(base_item)
+new_item_2.name = "lab-mmz-2"
+new_item_2.place_result = "lab-mmz-2"
+data:extend({new_item_2})
+-- Recipe for lab-mmz-2 is 10 lab-mmz
+local new_recipe_2 = table.deepcopy(base_recipe)
+new_recipe_2.name = "lab-mmz-2"
+new_recipe_2.enabled = true
+new_recipe_2.ingredients = {
+    {type = "item", name = "lab-mmz", amount = 10}
+}
+new_recipe_2.results[1]["name"] = "lab-mmz-2"
+data:extend({new_recipe_2})
 
 
 -- chest modifications
@@ -106,16 +156,17 @@ data.raw["lab"]["lab"].researching_speed =
 
 -- Mining drill modifications
 -- Also increase the production and fuel consumption of burner mining drills by 15 times
-data.raw["mining-drill"]["burner-mining-drill"].mining_speed =
-    data.raw["mining-drill"]["burner-mining-drill"].mining_speed * 15
-data.raw["mining-drill"]["burner-mining-drill"].energy_usage = tostring(
-    tonumber(string.match(
-                 data.raw["mining-drill"]["burner-mining-drill"].energy_usage,
-                 "%d+")) * 15) .. "kW"
+-- data.raw["mining-drill"]["burner-mining-drill"].mining_speed =
+--     data.raw["mining-drill"]["burner-mining-drill"].mining_speed * 15
+-- data.raw["mining-drill"]["burner-mining-drill"].energy_usage = tostring(
+--     tonumber(string.match(
+--                  data.raw["mining-drill"]["burner-mining-drill"].energy_usage,
+--                  "%d+")) * 15) .. "kW"
                  
 mining_drill_entities = {
     "electric-mining-drill", "burner-mining-drill", "pumpjack"
 }
+
 
 -- Remove pollution for all mining entities
 for _, drill_name in pairs(mining_drill_entities) do
@@ -168,10 +219,36 @@ for _, drill_name in pairs(mining_drill_entities) do
     new_recipe.enabled = true
     new_recipe.ingredients = base_recipe.ingredients
     new_recipe.results[1]["name"] = drill_name .. "-mmz"
-    -- Set the recipe ingredient to be 15 times the base item
-    new_recipe.ingredients = {{type = "item", name = drill_name, amount = 15}}
+    -- Set the recipe ingredient to be 10 times the base item
+    new_recipe.ingredients = {{type = "item", name = drill_name, amount = 10}}
 
     data:extend({new_recipe})
+
+    -- Create a mmz-2 version of the drill which is 10 times faster than mmz-1 and has 10 times the energy usage of mmz-1
+    local new_drill_2 = table.deepcopy(new_drill)
+    new_drill_2.name = drill_name .. "-mmz-2"
+    new_drill_2.minable.result = drill_name .. "-mmz-2"
+    new_drill_2.mining_speed = new_drill.mining_speed * 10
+    new_drill_2.energy_usage = tostring(tonumber(string.match(
+                                                   new_drill.energy_usage,
+                                                   "%d+")) * 10) .. "kW"
+    data:extend({new_drill_2})
+    -- Also create new item for the modded drill-mmz-2
+    local new_item_2 = table.deepcopy(base_item)
+    new_item_2.name = drill_name .. "-mmz-2"
+    new_item_2.place_result = drill_name .. "-mmz-2"
+    data:extend({new_item_2})
+    -- Create new recipe for the modded drill-mmz-2 but the recipe ingredients is same as mmz-1
+    local new_recipe_2 = table.deepcopy(base_recipe)
+    new_recipe_2.name = drill_name .. "-mmz-2"
+    new_recipe_2.enabled = true
+    new_recipe_2.ingredients = base_recipe.ingredients
+    new_recipe_2.results[1]["name"] = drill_name .. "-mmz-2"
+    -- Set the recipe ingredient to be 10 times the mmz-1 item
+    new_recipe_2.ingredients = {
+        {type = "item", name = drill_name .. "-mmz", amount = 10}
+    }
+    data:extend({new_recipe_2})
 end
 
 -- Furnace modifications
@@ -236,6 +313,32 @@ for _, furnace_name in pairs(furnace_entities) do
     -- Set the recipe ingredient to be 24 times the base item
     new_recipe.ingredients = {{type = "item", name = furnace_name, amount = 24}}
     data:extend({new_recipe})
+
+    -- Create a mmz-2 version of the furnace which is 10 times faster than mmz-1 and has 10 times the energy usage of mmz-1
+    local new_furnace_2 = table.deepcopy(new_furnace)
+    new_furnace_2.name = furnace_name .. "-mmz-2"
+    new_furnace_2.minable.result = furnace_name .. "-mmz-2"
+    new_furnace_2.crafting_speed = new_furnace.crafting_speed * 10
+    new_furnace_2.energy_usage = tostring(tonumber(string.match(
+                                                   new_furnace.energy_usage,
+                                                   "%d+")) * 10) .. "kW"
+    data:extend({new_furnace_2})
+    -- Also create new item for the modded furnace-mmz-2
+    local new_item_2 = table.deepcopy(base_item)
+    new_item_2.name = furnace_name .. "-mmz-2"
+    new_item_2.place_result = furnace_name .. "-mmz-2"
+    data:extend({new_item_2})
+    -- Create new recipe for the modded furnace-mmz-2 but the recipe ingredients is same as mmz-1
+    local new_recipe_2 = table.deepcopy(base_recipe)
+    new_recipe_2.name = furnace_name .. "-mmz-2"
+    new_recipe_2.enabled = true
+    new_recipe_2.ingredients = base_recipe.ingredients
+    new_recipe_2.results[1]["name"] = furnace_name .. "-mmz-2"
+    -- Set the recipe ingredient to be 10 times the mmz-1 item
+    new_recipe_2.ingredients = {
+        {type = "item", name = furnace_name .. "-mmz", amount = 10}
+    }
+    data:extend({new_recipe_2})
 end
 
 -- data.raw["furnace"]["stone-furnace"].crafting_speed = 3
@@ -281,15 +384,15 @@ for _, machine_name in pairs(all_crafting_entities) do
     local new_machine = table.deepcopy(base_machine)
     new_machine.name = machine_name .. "-mmz"
     new_machine.minable.result = machine_name .. "-mmz"
-    new_machine.crafting_speed = base_machine.crafting_speed * 15
+    new_machine.crafting_speed = base_machine.crafting_speed * 10
     new_machine.energy_usage = tostring(tonumber(string.match(
                                                      base_machine.energy_usage,
-                                                     "%d+")) * 15) .. "kW"
+                                                     "%d+")) * 10) .. "kW"
 
-    -- Increase pollution by 15 times if applicable
+    -- Increase pollution by 10 times if applicable
     if new_machine.energy_source.emissions_per_minute["pollution"] ~= nil then
         new_machine.energy_source.emissions_per_minute["pollution"] =
-            base_machine.energy_source.emissions_per_minute["pollution"] * 0 --15
+            base_machine.energy_source.emissions_per_minute["pollution"] * 0 --10
     end
        
     data:extend({new_machine})
@@ -308,14 +411,40 @@ for _, machine_name in pairs(all_crafting_entities) do
     new_recipe.enabled = true
     new_recipe.ingredients = base_recipe.ingredients
     new_recipe.results[1]["name"] = machine_name .. "-mmz"
-    -- Set the recipe ingredient to be 15 times the base item
+    -- Set the recipe ingredient to be 10 times the base item
     new_recipe.ingredients = {
-        {type = "item", name = machine_name, amount = 15}
+        {type = "item", name = machine_name, amount = 10}
     }
     data:extend({new_recipe})
+
+    -- Create a mmz-2 version of the machine which is 10 times faster than mmz-1 and has 10 times the energy usage of mmz-1
+    local new_machine_2 = table.deepcopy(new_machine)
+    new_machine_2.name = machine_name .. "-mmz-2"
+    new_machine_2.minable.result = machine_name .. "-mmz-2"
+    new_machine_2.crafting_speed = new_machine.crafting_speed * 10
+    new_machine_2.energy_usage = tostring(tonumber(string.match(
+                                                   new_machine.energy_usage,
+                                                   "%d+")) * 10) .. "kW"
+    data:extend({new_machine_2})
+    -- Also create new item for the modded machine-mmz-2
+    local new_item_2 = table.deepcopy(base_item)
+    new_item_2.name = machine_name .. "-mmz-2"
+    new_item_2.place_result = machine_name .. "-mmz-2"
+    data:extend({new_item_2})
+    -- Create new recipe for the modded machine-mmz-2 but the recipe ingredients is same as mmz-1
+    local new_recipe_2 = table.deepcopy(base_recipe)
+    new_recipe_2.name = machine_name .. "-mmz-2"
+    new_recipe_2.enabled = true
+    new_recipe_2.ingredients = base_recipe.ingredients
+    new_recipe_2.results[1]["name"] = machine_name .. "-mmz-2"
+    -- Set the recipe ingredient to be 10 times the mmz-1 item
+    new_recipe_2.ingredients = {
+        {type = "item", name = machine_name .. "-mmz", amount = 10}
+    }
+    data:extend({new_recipe_2})    
 end
 
--- Create a solar-panel-mmz which is 15 time more efficient
+-- Create a solar-panel-mmz which is 10 time more efficient
 -- Also make the solar panel store electricity like an accumulator
 local base_solar_panel = data.raw["solar-panel"]["solar-panel"]
 local new_solar_panel = table.deepcopy(base_solar_panel)
@@ -323,7 +452,7 @@ new_solar_panel.name = "solar-panel-mmz"
 new_solar_panel.minable.result = "solar-panel-mmz"
 new_solar_panel.production = tostring(tonumber(string.match(
                                                     base_solar_panel.production,
-                                                    "%d+")) * 100) .. "kW"
+                                                    "%d+")) * 10) .. "kW"
 data:extend({new_solar_panel})
 
 -- Also create new item for the modded solar panel
@@ -340,13 +469,38 @@ new_recipe.name = "solar-panel-mmz"
 new_recipe.enabled = true
 new_recipe.ingredients = base_recipe.ingredients
 new_recipe.results[1]["name"] = "solar-panel-mmz"
--- Set the recipe ingredient to be 15 times the base item
+-- Set the recipe ingredient to be 10 times the base item
 new_recipe.ingredients = {
-    {type = "item", name = "solar-panel", amount = 100}
+    {type = "item", name = "solar-panel", amount = 10}
 }
 data:extend({new_recipe})
 
--- Create an accumulator-mmz which is 15 time more efficient
+-- Create solar-panel-mmz-2 which is 10 times more efficient than solar-panel-mmz and has 10 times the energy storage of solar-panel-mmz
+local new_solar_panel_2 = table.deepcopy(new_solar_panel)
+new_solar_panel_2.name = "solar-panel-mmz-2"
+new_solar_panel_2.minable.result = "solar-panel-mmz-2"
+new_solar_panel_2.production = tostring(tonumber(string.match(
+                                                    new_solar_panel.production,
+                                                    "%d+")) * 10) .. "kW"
+data:extend({new_solar_panel_2})
+-- Also create new item for the modded solar panel-mmz-2
+local new_item_2 = table.deepcopy(base_item)
+new_item_2.name = "solar-panel-mmz-2"
+new_item_2.place_result = "solar-panel-mmz-2"
+data:extend({new_item_2})
+-- Create new recipe for the modded solar panel-mmz-2 but the recipe ingredients is same as mmz-1
+local new_recipe_2 = table.deepcopy(base_recipe)
+new_recipe_2.name = "solar-panel-mmz-2"
+new_recipe_2.enabled = true
+new_recipe_2.ingredients = base_recipe.ingredients
+new_recipe_2.results[1]["name"] = "solar-panel-mmz-2"
+-- Set the recipe ingredient to be 10 times the mmz-1 item
+new_recipe_2.ingredients = {
+    {type = "item", name = "solar-panel-mmz", amount = 10}
+}
+data:extend({new_recipe_2})
+
+-- Create an accumulator-mmz which is 10 time more efficient
 local base_accumulator = data.raw["accumulator"]["accumulator"]
 local new_accumulator = table.deepcopy(base_accumulator)
 new_accumulator.name = "accumulator-mmz"
@@ -355,17 +509,17 @@ new_accumulator.energy_source.buffer_capacity =  tostring(tonumber(
                                                         string.match(
                                                             base_accumulator.energy_source
                                                                 .buffer_capacity,
-                                                            "%d+")) * 84) .. "MJ"
+                                                            "%d+")) * 10) .. "MJ"
 new_accumulator.energy_source.input_flow_limit = tostring(tonumber(
                                                        string.match(
                                                            base_accumulator.energy_source
                                                                .input_flow_limit,
-                                                           "%d+")) * 84) .. "kW"
+                                                           "%d+")) * 10) .. "kW"
 new_accumulator.energy_source.output_flow_limit = tostring(tonumber(
                                                         string.match(
                                                             base_accumulator.energy_source
                                                                 .output_flow_limit,
-                                                            "%d+")) * 84) .. "kW"
+                                                            "%d+")) * 10) .. "kW"
 data:extend({new_accumulator})
 -- Also create new item for the modded accumulator
 local base_item = data.raw["item"]["accumulator"]
@@ -380,11 +534,96 @@ new_recipe.name = "accumulator-mmz"
 new_recipe.enabled = true
 new_recipe.ingredients = base_recipe.ingredients
 new_recipe.results[1]["name"] = "accumulator-mmz"
--- Set the recipe ingredient to be 15 times the base item
+-- Set the recipe ingredient to be 10 times the base item
 new_recipe.ingredients = {
-    {type = "item", name = "solar-panel", amount = 84}
+    {type = "item", name = "solar-panel", amount = 10}
 }
 data:extend({new_recipe})
+
+-- Create accumulator-mmz-2 which is 10 times more efficient than accumulator-mmz and has 10 times the energy storage of accumulator-mmz
+local new_accumulator_2 = table.deepcopy(new_accumulator)
+new_accumulator_2.name = "accumulator-mmz-2"
+new_accumulator_2.minable.result = "accumulator-mmz-2"
+new_accumulator_2.energy_source.buffer_capacity =  tostring(tonumber(
+                                                        string.match(
+                                                            new_accumulator.energy_source
+                                                                .buffer_capacity,
+                                                            "%d+")) * 10) .. "MJ"
+new_accumulator_2.energy_source.input_flow_limit = tostring(tonumber(
+                                                       string.match(
+                                                            new_accumulator.energy_source
+                                                            .input_flow_limit,
+                                                            "%d+")) * 10) .. "kW"
+new_accumulator_2.energy_source.output_flow_limit = tostring(tonumber(
+                                                        string.match(
+                                                            new_accumulator.energy_source
+                                                            .output_flow_limit,
+                                                            "%d+")) * 10) .. "kW"
+data:extend({new_accumulator_2})
+-- Also create new item for the modded accumulator-mmz-2
+local new_item_2 = table.deepcopy(base_item)
+new_item_2.name = "accumulator-mmz-2"
+new_item_2.place_result = "accumulator-mmz-2"
+data:extend({new_item_2})
+-- Create new recipe for the modded accumulator-mmz-2 but the recipe ingredients is same as mmz-1
+local new_recipe_2 = table.deepcopy(base_recipe)
+new_recipe_2.name = "accumulator-mmz-2"
+new_recipe_2.enabled = true
+new_recipe_2.ingredients = base_recipe.ingredients
+new_recipe_2.results[1]["name"] = "accumulator-mmz-2"
+-- Set the recipe ingredient to be 10 times the mmz-1 item
+new_recipe_2.ingredients = {
+    {type = "item", name = "accumulator-mmz", amount = 10}
+}
+data:extend({new_recipe_2})
+
+
+-- Enable recipe submachine-gun
+data.raw["recipe"]["submachine-gun"].enabled = true
+
+-- Create a sub-machine-gun-mmz which is 5 times more speed and has 5x range than the base sub-machine-gun
+local base_sub_machine_gun = data.raw["gun"]["submachine-gun"]
+local new_sub_machine_gun = table.deepcopy(base_sub_machine_gun)
+new_sub_machine_gun.name = "submachine-gun-mmz"
+new_sub_machine_gun.attack_parameters.cooldown =
+    math.floor(base_sub_machine_gun.attack_parameters.cooldown / 5)
+new_sub_machine_gun.attack_parameters.range =
+    base_sub_machine_gun.attack_parameters.range * 5
+data:extend({new_sub_machine_gun})
+-- Create new recipe for the modded sub-machine-gun but the recipe ingredients is same as
+local base_recipe = data.raw["recipe"]["submachine-gun"]
+local new_recipe = table.deepcopy(base_recipe)
+new_recipe.name = "submachine-gun-mmz"
+new_recipe.enabled = true
+new_recipe.ingredients = base_recipe.ingredients
+new_recipe.results[1]["name"] = "submachine-gun-mmz"
+-- Set the recipe ingredient to be 5 times the base item
+new_recipe.ingredients = {
+    {type = "item", name = "submachine-gun", amount = 5}
+}
+data:extend({new_recipe})
+
+-- Create a sub-machine-gun-mmz-2 which is 5 times more speed and has 5x range than the sub-machine-gun-mmz
+local new_sub_machine_gun_2 = table.deepcopy(new_sub_machine_gun)
+new_sub_machine_gun_2.name = "submachine-gun-mmz-2"
+new_sub_machine_gun_2.attack_parameters.cooldown =
+    math.floor(new_sub_machine_gun.attack_parameters.cooldown / 5)
+new_sub_machine_gun_2.attack_parameters.range =
+    new_sub_machine_gun.attack_parameters.range * 5
+data:extend({new_sub_machine_gun_2})
+-- Create new recipe for the modded sub-machine-gun-mmz-2 but the recipe
+-- ingredients is same as sub-machine-gun-mmz
+local new_recipe_2 = table.deepcopy(base_recipe)
+new_recipe_2.name = "submachine-gun-mmz-2"
+new_recipe_2.enabled = true
+new_recipe_2.ingredients = base_recipe.ingredients
+new_recipe_2.results[1]["name"] = "submachine-gun-mmz-2"
+-- Set the recipe ingredient to be 5 times the sub-machine-gun-mmz item
+new_recipe_2.ingredients = {
+    {type = "item", name = "submachine-gun-mmz", amount = 5}
+}
+data:extend({new_recipe_2})
+
 
 -- Train modifications
 -- Increase max speed of locomotive by 3 times
@@ -422,31 +661,3 @@ data.raw["artillery-wagon"]["artillery-wagon"].braking_force =
 -- -- Increase the inventory of artillery-wagon by 10 times
 -- data.raw["artillery-wagon"]["artillery-wagon"].inventory_size =
 --     data.raw["artillery-wagon"]["artillery-wagon"].inventory_size * 10
-
--- Enable recipe submachine-gun
-data.raw["recipe"]["submachine-gun"].enabled = true
-
--- Create a sub-machine-gun-mmz which is 100 times more faster and has 100x range than the base sub-machine-gun
-local base_sub_machine_gun = data.raw["gun"]["submachine-gun"]
-local new_sub_machine_gun = table.deepcopy(base_sub_machine_gun)
-new_sub_machine_gun.name = "submachine-gun-mmz"
--- new_sub_machine_gun.minable.result = "submachine-gun-mmz"
--- new_sub_machine_gun.attack_parameters.ammo_type.action.action_delivery.target_effects[1].damage.amount =
---     base_sub_machine_gun.attack_parameters.ammo_type.action.action_delivery.target_effects[1].damage.amount * 100
-new_sub_machine_gun.attack_parameters.cooldown =
-    math.floor(base_sub_machine_gun.attack_parameters.cooldown / 100)
-new_sub_machine_gun.attack_parameters.range =
-    base_sub_machine_gun.attack_parameters.range * 100
-data:extend({new_sub_machine_gun})
--- Create new recipe for the modded sub-machine-gun but the recipe ingredients is same as
-local base_recipe = data.raw["recipe"]["submachine-gun"]
-local new_recipe = table.deepcopy(base_recipe)
-new_recipe.name = "submachine-gun-mmz"
-new_recipe.enabled = true
-new_recipe.ingredients = base_recipe.ingredients
-new_recipe.results[1]["name"] = "submachine-gun-mmz"
--- Set the recipe ingredient to be 100 times the base item
-new_recipe.ingredients = {
-    {type = "item", name = "submachine-gun", amount = 100}
-}
-data:extend({new_recipe})
